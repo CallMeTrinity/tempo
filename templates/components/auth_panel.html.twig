@@ -1,0 +1,35 @@
+{# @param string eyebrow - Petit label en haut (ex. "N° 01 — Retour") #}
+{# @param string number  - Le grand chiffre éditorial (ex. "37.5") #}
+{# @param string unit    - Unité (ex. "heures") #}
+{# @param string lede    - Phrase descriptive sous le chiffre #}
+
+<aside class="ep">
+    <div class="ep-top">
+        <div class="ep-logo">
+            <span class="ep-logo-mark">
+                <img src="{{ asset('images/logo.png') }}" alt="" class="w-5 h-5">
+            </span>
+            <span class="ep-logo-text">Tempo</span>
+        </div>
+    </div>
+
+    <div class="ep-body">
+        <div class="ep-eyebrow">{{ eyebrow }}</div>
+        <div class="ep-numeral">
+            <span class="ep-numeral-big">{{ number }}</span>
+            <span class="ep-numeral-unit">{{ unit }}</span>
+        </div>
+        <p class="ep-lede">{{ lede }}</p>
+    </div>
+
+    <footer class="ep-foot">
+        <div class="ep-foot-row">
+            <span class="ep-foot-k">Semaine</span>
+            <span class="ep-foot-v num">{{ "now"|date("W / Y") }}</span>
+        </div>
+        <div class="ep-foot-row">
+            <span class="ep-foot-k">Édition</span>
+            <span class="ep-foot-v num">Tempo · 2026</span>
+        </div>
+    </footer>
+</aside>

@@ -1,23 +1,77 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Inscription · Tempo{% endblock %}
 
 {% block body %}
-    {% for flash_error in app.flashes('verify_email_error') %}
-        <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
-    {% endfor %}
+    <main class="auth-page">
+        {% include 'components/auth_panel.html.twig' with {
+            eyebrow: 'N° 02 — Bienvenue',
+            number: '00.0',
+            unit: 'heures',
+            lede: "Le décompte commence ici. Créez votre compte pour pointer vos heures, signaler vos congés et envoyer chaque semaine en un clic."
+        } only %}
 
-    <h1>Register</h1>
+        <section class="form-side">
+            <header class="form-side-top">
+                <a href="{{ path('app_login') }}" class="back-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
+                    Connexion
+                </a>
+                <div class="lang">FR · <span class="text-small-font">EN</span></div>
+            </header>
 
-    {{ form_errors(registrationForm) }}
+            <div class="form-wrap">
+                <div class="form-card">
+                    {% for flash_error in app.flashes('verify_email_error') %}
+                        <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+                    {% endfor %}
 
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-        {{ form_row(registrationForm.agreeTerms) }}
+                    <div class="form-head">
+                        <div class="eyebrow">Inscription</div>
+                        <h1 class="form-h1">Créez votre compte.</h1>
+                        <p class="form-sub">Quelques détails — vous pourrez inviter votre équipe juste après.</p>
+                    </div>
 
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
+                    {{ form_errors(registrationForm) }}
+
+                    {{ form_start(registrationForm, {attr: {class: 'flex flex-col gap-4'}}) }}
+                        <div class="divider"><span>avec votre adresse e-mail</span></div>
+
+                        {{ form_row(registrationForm.email, {
+                            label: 'Adresse e-mail professionnelle',
+                            attr: {placeholder: 'vous@entreprise.com', autocomplete: 'email'}
+                        }) }}
+
+                        {{ form_row(registrationForm.plainPassword, {
+                            label: 'Mot de passe',
+                            attr: {placeholder: '12 caractères ou plus'},
+                            help: '12 caractères minimum, avec une majuscule et un chiffre.'
+                        }) }}
+
+                        {{ form_row(registrationForm.agreeTerms, {
+                            label: "J'accepte les conditions d'utilisation et la politique de confidentialité."
+                        }) }}
+
+                        <button type="submit" class="btn-submit">
+                            <span>Créer mon compte</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </button>
+                    {{ form_end(registrationForm) }}
+
+                    <div class="form-foot">
+                        Déjà inscrit ?
+                        <a href="{{ path('app_login') }}" class="link-swap">Se connecter</a>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="form-side-foot">
+                <span>© 2026 Tempo</span>
+                <span class="dot">·</span>
+                <a href="#">Aide</a>
+                <span class="dot">·</span>
+                <a href="#">Confidentialité</a>
+            </footer>
+        </section>
+    </main>
 {% endblock %}

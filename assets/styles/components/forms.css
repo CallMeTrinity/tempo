@@ -1,0 +1,110 @@
+@layer components {
+    .field {
+        @apply flex flex-col gap-1.5;
+    }
+    .field-row {
+        @apply grid grid-cols-2 gap-3;
+    }
+
+    .lbl {
+        @apply text-[11.5px] font-medium tracking-wider uppercase text-ink-soft;
+    }
+    .lbl-row {
+        @apply flex justify-between items-baseline;
+    }
+
+    .inp {
+        @apply w-full px-3.5 py-2.5 rounded-md text-sm bg-card;
+        @apply border border-rule;
+        @apply transition-[border-color,box-shadow,background] duration-150;
+    }
+    .inp::placeholder {
+        color: color-mix(in srgb, var(--color-small-font) 70%, var(--color-rule));
+    }
+    .inp:hover {
+        @apply border-ink-soft;
+    }
+    .inp:focus {
+        @apply outline-none border-dark-font;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-dark-font) 8%, transparent);
+    }
+
+    .inp-with-icon {
+        @apply relative;
+    }
+    .inp-with-icon .inp {
+        @apply pr-10;
+    }
+
+    .hint {
+        @apply text-[11.5px] text-small-font;
+    }
+
+    .error {
+        @apply text-[11.5px] text-warn mt-1;
+    }
+
+    .divider {
+        @apply flex items-center gap-3 my-1 text-[11px] text-small-font tracking-wide;
+    }
+    .divider::before,
+    .divider::after {
+        content: "";
+        @apply flex-1 h-px bg-rule;
+    }
+
+    .check {
+        @apply flex items-start gap-2.5 py-1 text-[13px] text-ink-soft;
+        @apply cursor-pointer select-none leading-snug relative;
+    }
+    .check input {
+        @apply absolute opacity-0 pointer-events-none;
+    }
+    .check-box {
+        @apply shrink-0 w-[17px] h-[17px] mt-px;
+        @apply border border-rule rounded bg-card grid place-items-center;
+        @apply transition-[background,border-color,color] duration-150;
+        color: transparent;
+    }
+    .check input:checked + .check-box {
+        @apply bg-dark-font border-dark-font text-paper;
+    }
+    .check input:focus-visible + .check-box {
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-dark-font) 8%, transparent);
+    }
+
+    .eyebrow {
+        @apply text-[11px] tracking-[0.16em] uppercase text-small-font mb-3;
+    }
+
+    .form-h1 {
+        @apply font-instrument font-normal m-0 mb-3 leading-none;
+        font-size: clamp(40px, 4vw, 52px);
+        letter-spacing: -0.025em;
+    }
+
+    .form-sub {
+        @apply text-small-font text-sm m-0 max-w-[36ch];
+    }
+
+    .form-foot {
+        @apply text-center text-[13px] text-small-font mt-2;
+    }
+
+    .pw-meter {
+        @apply flex flex-col gap-1.5 mt-1;
+    }
+    .pw-bars {
+        @apply grid grid-cols-4 gap-1;
+    }
+    .pw-bar {
+        @apply h-[3px] rounded-sm bg-rule transition-[background] duration-200;
+    }
+    .pw-bar.is-on.is-weak  { @apply bg-warn; }
+    .pw-bar.is-on.is-ok    { background: #c98a3a; }
+    .pw-bar.is-on.is-good  { @apply bg-accent; }
+    .pw-bar.is-on.is-strong{ @apply bg-accent; }
+    .pw-label {
+        @apply text-[11.5px] text-small-font;
+    }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "symfony-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/antonin.p/symfony-tempo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://gitlab.com/antonin.p/symfony-tempo/issues"
+  },
+  "homepage": "https://gitlab.com/antonin.p/symfony-tempo#readme",
+  "devDependencies": {
+    "tailwindcss": "^4.3.0"
+  }
+}

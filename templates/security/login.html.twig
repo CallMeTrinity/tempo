@@ -1,38 +1,85 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Log in!{% endblock %}
+{% block title %}Connexion · Tempo{% endblock %}
 
 {% block body %}
-    <form method="post">
-        {% if error %}
-            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
+    <main class="auth-page">
+        {% include 'components/auth_panel.html.twig' with {
+            eyebrow: 'N° 01 — Retour',
+            number: '37.5',
+            unit: 'heures',
+            lede: "Reprenez là où vous en étiez. Votre semaine en cours vous attend, prête à être pointée et soumise à validation."
+        } only %}
 
-        {% if app.user %}
-            <div class="mb-3">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+        <section class="form-side">
+            <header class="form-side-top">
+                <a href="/" class="back-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
+                    Accueil
+                </a>
+                <div class="lang">FR · <span class="text-small-font">EN</span></div>
+            </header>
+
+            <div class="form-wrap">
+                <form method="post" class="form-card">
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                    {% endif %}
+
+                    {% if app.user %}
+                        <div class="alert">
+                            Connecté en tant que {{ app.user.userIdentifier }}.
+                            <a href="{{ logout_path() }}" class="link-q">Se déconnecter</a>
+                        </div>
+                    {% endif %}
+
+                    <div class="form-head">
+                        <div class="eyebrow">Connexion</div>
+                        <h1 class="form-h1">Bon retour.</h1>
+                        <p class="form-sub">Saisissez vos identifiants pour reprendre votre semaine en cours.</p>
+                    </div>
+
+                    <div class="divider"><span>identifiez-vous</span></div>
+
+                    <div class="field">
+                        <label for="username" class="lbl">Adresse e-mail</label>
+                        <input type="text" value="{{ last_username }}" name="_username" id="username"
+                               class="inp" placeholder="vous@entreprise.com"
+                               autocomplete="username" required autofocus>
+                    </div>
+
+                    <div class="field">
+                        <div class="lbl-row">
+                            <label for="password" class="lbl">Mot de passe</label>
+                            <a href="#" class="link-q">Mot de passe oublié ?</a>
+                        </div>
+                        <input type="password" name="_password" id="password"
+                               class="inp" placeholder="••••••••••"
+                               autocomplete="current-password" required>
+                    </div>
+
+                    <input type="hidden" name="_csrf_token" data-controller="csrf-protection"
+                           value="{{ csrf_token('authenticate') }}">
+
+                    <button class="btn-submit" type="submit">
+                        <span>Se connecter</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+
+                    <div class="form-foot">
+                        Pas encore de compte ?
+                        <a href="{{ path('app_register') }}" class="link-swap">Créer un compte</a>
+                    </div>
+                </form>
             </div>
-        {% endif %}
 
-        <h1 class="text-3xl font-bold">Please sign in</h1>
-        <label for="username">Username</label>
-        <input type="text" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="username" required autofocus>
-        <label for="password">Password</label>
-        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
-        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
-
-        {#
-            Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
-            See https://symfony.com/doc/current/security/remember_me.html
-
-            <div class="checkbox mb-3">
-                <input type="checkbox" name="_remember_me" id="_remember_me">
-                <label for="_remember_me">Remember me</label>
-            </div>
-        #}
-
-        <button class="" type="submit">
-            Sign in
-        </button>
-    </form>
+            <footer class="form-side-foot">
+                <span>© 2026 Tempo</span>
+                <span class="dot">·</span>
+                <a href="#">Aide</a>
+                <span class="dot">·</span>
+                <a href="#">Confidentialité</a>
+            </footer>
+        </section>
+    </main>
 {% endblock %}

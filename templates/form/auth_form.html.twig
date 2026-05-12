@@ -1,0 +1,86 @@
+{# Form theme applying the auth design system (.field / .lbl / .inp / .check) #}
+{% use 'form_div_layout.html.twig' %}
+
+{%- block form_row -%}
+    {%- if compound is defined and compound -%}
+        {%- set element = 'fieldset' -%}
+    {%- endif -%}
+    {%- set widget_attr = {} -%}
+    {%- set row_class = row_attr.class|default('field') -%}
+    {%- set row_attr = row_attr|merge({class: row_class}) -%}
+    <{{ element|default('div') }}{% with { attr: row_attr } %}{{ block('attributes') }}{% endwith %}>
+        {%- if label is not same as(false) -%}{{ form_label(form) }}{%- endif -%}
+        {{- form_widget(form, widget_attr) -}}
+        {{- form_help(form) -}}
+        {{- form_errors(form) -}}
+    </{{ element|default('div') }}>
+{%- endblock form_row -%}
+
+{%- block form_label -%}
+    {%- if label is not same as(false) -%}
+        {%- if label_attr.class is not defined -%}
+            {%- set label_attr = label_attr|merge({class: 'lbl'}) -%}
+        {%- endif -%}
+        {{- parent() -}}
+    {%- endif -%}
+{%- endblock form_label -%}
+
+{%- block form_widget_simple -%}
+    {%- set type = type|default('text') -%}
+    {%- if attr.class is not defined -%}
+        {%- set attr = attr|merge({class: 'inp'}) -%}
+    {%- endif -%}
+    {{- parent() -}}
+{%- endblock form_widget_simple -%}
+
+{%- block textarea_widget -%}
+    {%- if attr.class is not defined -%}
+        {%- set attr = attr|merge({class: 'inp'}) -%}
+    {%- endif -%}
+    {{- parent() -}}
+{%- endblock textarea_widget -%}
+
+{%- block choice_widget_collapsed -%}
+    {%- if attr.class is not defined -%}
+        {%- set attr = attr|merge({class: 'inp'}) -%}
+    {%- endif -%}
+    {{- parent() -}}
+{%- endblock choice_widget_collapsed -%}
+
+{%- block checkbox_row -%}
+    <label class="check">
+        {{- form_widget(form) -}}
+        <span class="check-box">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4 10-10"/></svg>
+        </span>
+        <span>{{ form_label(form, null, {label_attr: {class: ''}}) }}</span>
+        {{- form_errors(form) -}}
+    </label>
+{%- endblock checkbox_row -%}
+
+{%- block checkbox_widget -%}
+    {%- set attr = attr|merge({class: attr.class|default('')}) -%}
+    <input type="checkbox" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+{%- endblock checkbox_widget -%}
+
+{%- block checkbox_label -%}
+    {%- if label is not same as(false) -%}
+        {{- label|trans(label_translation_parameters|default({}), translation_domain) -}}
+    {%- endif -%}
+{%- endblock checkbox_label -%}
+
+{%- block form_errors -%}
+    {%- if errors|length > 0 -%}
+        <div class="error">
+            {%- for error in errors -%}
+                <span>{{ error.message }}</span>
+            {%- endfor -%}
+        </div>
+    {%- endif -%}
+{%- endblock form_errors -%}
+
+{%- block form_help -%}
+    {%- if help is not empty -%}
+        <div class="hint">{{ help|trans(help_translation_parameters|default({}), translation_domain) }}</div>
+    {%- endif -%}
+{%- endblock form_help -%}
