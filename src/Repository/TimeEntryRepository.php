@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\TimeEntry;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +17,43 @@ class TimeEntryRepository extends ServiceEntityRepository
         parent::__construct($registry, TimeEntry::class);
     }
 
-//    /**
-//     * @return TimeEntry[] Returns an array of TimeEntry objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('t.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @return TimeEntry[]
+     */
+    public function findByUser(int $userId): array
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.user = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('t.date', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-//    public function findOneBySomeField($value): ?TimeEntry
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findOneByUserAndDate(User $user, \DateTimeInterface $date): ?TimeEntry
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.user = :user')
+            ->andWhere('t.date = :date')
+            ->setParameter('user', $user)
+            ->setParameter('date', $date->format('Y-m-d'))
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @return TimeEntry[]
+     */
+    public function findByUserBetween(User $user, \DateTimeInterface $from, \DateTimeInterface $to): array
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.user = :user')
+            ->andWhere('t.date BETWEEN :from AND :to')
+            ->setParameter('user', $user)
+            ->setParameter('from', $from->format('Y-m-d'))
+            ->setParameter('to', $to->format('Y-m-d'))
+            ->orderBy('t.date', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

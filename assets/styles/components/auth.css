@@ -30,7 +30,7 @@
         @apply flex items-center gap-2.5;
     }
     .ep-logo-mark {
-        @apply w-7 h-7 grid place-items-center rounded-full bg-light-font text-dark-primary;
+        @apply w-7 h-7 grid place-items-center rounded-full bg-light-font text-panel-dark;
     }
     .ep-logo-text {
         @apply font-instrument text-[22px] leading-none;

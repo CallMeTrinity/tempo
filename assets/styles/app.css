@@ -4,6 +4,8 @@
 @import "./components/buttons.css";
 @import "./components/forms.css";
 @import "./components/auth.css";
+@import "./components/timesheet.css";
+@import "./components/profile.css";
 
 @theme {
     --color-panel-dark: #14130f;

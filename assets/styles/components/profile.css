@@ -1,0 +1,92 @@
+@layer components {
+    /* ---- Profile hero ---- */
+    .pf-hero {
+        @apply flex items-center gap-6 flex-wrap;
+    }
+    .pf-avatar-lg {
+        @apply w-20 h-20 grid place-items-center rounded-full bg-accent text-light-font font-instrument text-[28px];
+        letter-spacing: 0.02em;
+    }
+    .pf-hero-text {
+        @apply flex flex-col gap-1;
+    }
+    .pf-hero-name {
+        @apply font-instrument m-0 leading-none;
+        font-size: clamp(38px, 4.5vw, 56px);
+        letter-spacing: -0.025em;
+    }
+    .pf-hero-meta {
+        @apply text-small-font text-[13px] flex flex-wrap items-center gap-2;
+    }
+    .pf-hero-meta .dot {
+        @apply opacity-40;
+    }
+
+    /* ---- Onboarding banner (profile incomplete) ---- */
+    .pf-onboard {
+        @apply flex items-start gap-3 p-4 rounded-md;
+        background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+        border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+    }
+    .pf-onboard-icon {
+        @apply shrink-0 w-6 h-6 grid place-items-center rounded-full text-light-font bg-accent;
+    }
+    .pf-onboard-text {
+        @apply text-[13px] text-ink-soft leading-snug;
+    }
+    .pf-onboard-text strong {
+        @apply text-dark-font font-medium block mb-0.5;
+    }
+
+    /* ---- Stat grid ---- */
+    .pf-stats {
+        @apply grid gap-3;
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .pf-stat {
+        @apply flex flex-col gap-1.5 p-4 rounded-md border border-rule bg-card;
+    }
+    .pf-stat-k {
+        @apply text-[10px] tracking-[0.16em] uppercase text-small-font;
+    }
+    .pf-stat-v {
+        @apply font-instrument leading-none;
+        font-size: clamp(26px, 2.4vw, 34px);
+    }
+    .pf-stat-sub {
+        @apply text-[11.5px] text-small-font;
+    }
+    .pf-stat-sub.is-positive { @apply text-accent; }
+    .pf-stat-sub.is-negative { @apply text-warn; }
+
+    /* ---- Two-column layout: form + account info ---- */
+    .pf-cols {
+        @apply grid gap-8;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    }
+
+    /* ---- Key/value rows (account info) ---- */
+    .kv {
+        @apply flex flex-col;
+    }
+    .kv-row {
+        @apply flex items-baseline justify-between gap-4 py-2.5 border-b border-rule-soft;
+    }
+    .kv-row:last-child {
+        @apply border-b-0;
+    }
+    .kv-k {
+        @apply text-[11px] tracking-[0.14em] uppercase text-small-font;
+    }
+    .kv-v {
+        @apply text-[14px] text-dark-font text-right;
+    }
+    .kv-v.muted {
+        @apply text-small-font italic;
+    }
+
+    @media (max-width: 880px) {
+        .pf-stats { grid-template-columns: repeat(2, 1fr); }
+        .pf-cols { grid-template-columns: 1fr; }
+    }
+}

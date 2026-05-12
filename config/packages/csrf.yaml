@@ -1,4 +1,5 @@
-# Enable stateless CSRF protection for forms and logins/logouts
+# Stateful CSRF for forms (traditional, no JS required)
+# Stateless CSRF kept for login/logout (uses the csrf-protection Stimulus controller)
 framework:
     form:
         csrf_protection:

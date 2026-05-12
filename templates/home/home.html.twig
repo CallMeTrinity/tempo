@@ -1,0 +1,174 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes heures · Tempo{% endblock %}
+
+{% block body %}
+    {% set today = "now"|date("Y-m-d") %}
+    {% set selectedKey = selectedDate|date("Y-m-d") %}
+
+    {% set dowFr = {'Mon': 'Lun', 'Tue': 'Mar', 'Wed': 'Mer', 'Thu': 'Jeu', 'Fri': 'Ven', 'Sat': 'Sam', 'Sun': 'Dim'} %}
+    {% set dowFrFull = {'Mon': 'lundi', 'Tue': 'mardi', 'Wed': 'mercredi', 'Thu': 'jeudi', 'Fri': 'vendredi', 'Sat': 'samedi', 'Sun': 'dimanche'} %}
+    {% set monthFr = {'Jan': 'janvier', 'Feb': 'février', 'Mar': 'mars', 'Apr': 'avril', 'May': 'mai', 'Jun': 'juin', 'Jul': 'juillet', 'Aug': 'août', 'Sep': 'septembre', 'Oct': 'octobre', 'Nov': 'novembre', 'Dec': 'décembre'} %}
+    {% set monthFrShort = {'Jan': 'janv.', 'Feb': 'févr.', 'Mar': 'mars', 'Apr': 'avr.', 'May': 'mai', 'Jun': 'juin', 'Jul': 'juil.', 'Aug': 'août', 'Sep': 'sept.', 'Oct': 'oct.', 'Nov': 'nov.', 'Dec': 'déc.'} %}
+
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'home'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        {# ---------- Hero ---------- #}
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">Semaine {{ weekStart|date("W") }} · {{ weekStart|date("d") }} {{ monthFrShort[weekStart|date("M")] }} → {{ weekEnd|date("d") }} {{ monthFrShort[weekEnd|date("M")] }} {{ weekEnd|date("Y") }}</div>
+            <div class="ts-hero-row">
+                <h1 class="ts-hero-title">
+                    <span class="num">{{ weekTotal|number_format(1, ',', ' ') }}</span><em>h</em>
+                    {% if weeklyTarget %}
+                        <span class="text-small-font text-base num"> / {{ weeklyTarget|number_format(1, ',', ' ') }}h</span>
+                    {% endif %}
+                </h1>
+                <div class="ts-hero-metrics">
+                    {% if weeklyProgress is not null %}
+                        <div>
+                            <span class="ts-metric-k">Progression</span>
+                            <span class="ts-metric-v num">{{ weeklyProgress }}%</span>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <span class="ts-metric-k">Jours saisis</span>
+                        <span class="ts-metric-v num">{{ weekByDate|length }} / 7</span>
+                    </div>
+                    <div>
+                        <span class="ts-metric-k">Cumul global</span>
+                        <span class="ts-metric-v num">{{ grandTotal|number_format(1, ',', ' ') }}h</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {# ---------- Weekly grid ---------- #}
+        <section class="ts-week">
+            {% for i in 0..6 %}
+                {% set dayDate = weekStart|date_modify("+" ~ i ~ " days") %}
+                {% set dayKey = dayDate|date("Y-m-d") %}
+                {% set entry = weekByDate[dayKey] ?? null %}
+                {% set isFuture = dayKey > today %}
+                {% set isSelected = dayKey == selectedKey %}
+                {% set isToday = dayKey == today %}
+
+                <a href="{{ path('app_home', {date: dayKey}) }}"
+                   class="ts-day
+                          {{ entry is null ? 'is-empty' : '' }}
+                          {{ isToday ? 'is-today' : '' }}
+                          {{ isSelected ? 'is-selected' : '' }}
+                          {{ isFuture ? 'is-future' : '' }}">
+                    <div class="ts-day-head">
+                        <span class="ts-day-dow">{{ dowFr[dayDate|date("D")] }}</span>
+                        <span class="ts-day-num">{{ dayDate|date("d") }}</span>
+                    </div>
+                    <div class="ts-day-hours">
+                        {% if entry %}{{ entry.hoursWorked|number_format(1, ',', ' ') }}h{% else %}—{% endif %}
+                    </div>
+                    {% if entry %}
+                        <div class="ts-day-status">{{ entry.status.value|replace({'_': ' '}) }}</div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </section>
+
+        {# ---------- Form + Recent ---------- #}
+        <section class="ts-cols">
+            {# Form card #}
+            <div class="ts-card">
+                <div>
+                    <div class="ts-card-eyebrow">{{ isEdit ? 'Modifier l’entrée' : 'Nouvelle entrée' }}</div>
+                    <h2 class="ts-card-title">{{ dowFrFull[selectedDate|date("D")]|capitalize }} {{ selectedDate|date("d") }} {{ monthFr[selectedDate|date("M")] }} {{ selectedDate|date("Y") }}</h2>
+                    <p class="ts-card-sub">
+                        {% if isEdit %}
+                            Vous pouvez ajuster les horaires ou supprimer cette entrée.
+                        {% else %}
+                            Saisissez vos horaires pour cette journée.
+                        {% endif %}
+                    </p>
+                </div>
+
+                {{ form_start(timeEntryForm, {attr: {class: 'flex flex-col gap-4'}}) }}
+                    {% if not timeEntryForm.vars.valid %}
+                        <div class="flash flash-error">
+                            {{ form_errors(timeEntryForm) }}
+                        </div>
+                    {% endif %}
+
+                    <div class="field-row">
+                        {{ form_row(timeEntryForm.date) }}
+                        {{ form_row(timeEntryForm.breakDuration) }}
+                    </div>
+                    <div class="field-row">
+                        {{ form_row(timeEntryForm.startTime) }}
+                        {{ form_row(timeEntryForm.endTime) }}
+                    </div>
+                    {{ form_row(timeEntryForm.note) }}
+
+                    <div class="flex items-center justify-between gap-3 mt-2">
+                        <button type="submit" class="btn-submit">
+                            <span>{{ isEdit ? 'Mettre à jour' : 'Enregistrer la journée' }}</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </button>
+                    </div>
+                {{ form_end(timeEntryForm, {render_rest: false}) }}
+
+                {% if isEdit and timeEntryForm.vars.value.id %}
+                    <form action="{{ path('app_time_entry_delete', {id: timeEntryForm.vars.value.id}) }}" method="post"
+                          onsubmit="return confirm('Supprimer cette entrée ?');"
+                          class="mt-2">
+                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('delete_entry_' ~ timeEntryForm.vars.value.id) }}">
+                        <button type="submit" class="link-q">Supprimer cette entrée</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            {# Recent entries card #}
+            <div class="ts-card">
+                <div>
+                    <div class="ts-card-eyebrow">Historique récent</div>
+                    <h2 class="ts-card-title">10 dernières entrées</h2>
+                </div>
+
+                {% if recentEntries is empty %}
+                    <div class="ts-empty">Aucune entrée pour le moment.<br>Saisissez votre première journée.</div>
+                {% else %}
+                    <div class="ts-list">
+                        {% for entry in recentEntries %}
+                            <div class="ts-row">
+                                <a href="{{ path('app_home', {date: entry.date|date('Y-m-d')}) }}" class="ts-row-date no-underline">
+                                    <span class="ts-row-date-strong">{{ entry.date|date('d/m') }}</span>
+                                    <span class="block opacity-60 text-[11px]">{{ entry.date|date('Y') }}</span>
+                                </a>
+                                <div class="ts-row-meta">
+                                    <span>{{ entry.startTime|date('H:i') }} → {{ entry.endTime|date('H:i') }}
+                                        {% if entry.breakDuration %}· pause {{ entry.breakDuration }}min{% endif %}
+                                    </span>
+                                    {% if entry.note %}<span class="ts-row-note">{{ entry.note }}</span>{% endif %}
+                                </div>
+                                <div class="ts-row-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</div>
+                                <div>
+                                    {% set s = entry.status.value %}
+                                    <span class="ts-row-badge ts-badge-{{ s == 'draft' ? 'draft' : (s == 'submitted' ? 'submitted' : (s == 'approved' ? 'approved' : 'review')) }}">
+                                        {{ s|replace({'_': ' '}) }}
+                                    </span>
+                                </div>
+                                <div class="ts-row-actions ts-icon-btn-delete">
+                                    <form action="{{ path('app_time_entry_delete', {id: entry.id}) }}" method="post"
+                                          onsubmit="return confirm('Supprimer cette entrée ?');">
+                                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('delete_entry_' ~ entry.id) }}">
+                                        <button type="submit" class="ts-icon-btn" title="Supprimer">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+{% endblock %}

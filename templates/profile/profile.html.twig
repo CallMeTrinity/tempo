@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profil · Tempo{% endblock %}
+
+{% block body %}
+    {% set monthFr = {'Jan': 'janvier', 'Feb': 'février', 'Mar': 'mars', 'Apr': 'avril', 'May': 'mai', 'Jun': 'juin', 'Jul': 'juillet', 'Aug': 'août', 'Sep': 'septembre', 'Oct': 'octobre', 'Nov': 'novembre', 'Dec': 'décembre'} %}
+
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'profile'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        {# ---------- Hero ---------- #}
+        <section class="pf-hero">
+            <div class="pf-avatar-lg">{{ user.initials }}</div>
+            <div class="pf-hero-text">
+                <h1 class="pf-hero-name">{{ user.fullName ?? 'Bonjour.' }}</h1>
+                <div class="pf-hero-meta">
+                    {% if user.jobTitle %}<span>{{ user.jobTitle }}</span><span class="dot">·</span>{% endif %}
+                    {% if user.contractType %}<span>{{ user.contractType.label }}</span><span class="dot">·</span>{% endif %}
+                    {% if user.weeklyHours %}<span class="num">{{ user.weeklyHours|number_format(1, ',', ' ') }}h / semaine</span><span class="dot">·</span>{% endif %}
+                    <span>{{ user.email }}</span>
+                </div>
+            </div>
+        </section>
+
+        {# ---------- Onboarding banner ---------- #}
+        {% if not user.isProfileComplete %}
+            <div class="pf-onboard">
+                <span class="pf-onboard-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 17h.01"/></svg>
+                </span>
+                <div class="pf-onboard-text">
+                    <strong>Complétez votre profil</strong>
+                    Renseignez votre type de contrat et vos heures hebdomadaires pour activer la progression hebdomadaire sur l'accueil.
+                </div>
+            </div>
+        {% endif %}
+
+        {# ---------- Stats ---------- #}
+        <section class="pf-stats">
+            <div class="pf-stat">
+                <span class="pf-stat-k">Heures cumulées</span>
+                <span class="pf-stat-v num">{{ stats.totalHours|number_format(1, ',', ' ') }}h</span>
+                <span class="pf-stat-sub">depuis le début</span>
+            </div>
+            <div class="pf-stat">
+                <span class="pf-stat-k">Entrées</span>
+                <span class="pf-stat-v num">{{ stats.totalEntries }}</span>
+                <span class="pf-stat-sub">{{ stats.distinctWeeks }} semaine{{ stats.distinctWeeks > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="pf-stat">
+                <span class="pf-stat-k">Moyenne / semaine</span>
+                <span class="pf-stat-v num">{{ stats.avgHoursPerWeek|number_format(1, ',', ' ') }}h</span>
+                {% if stats.targetDelta is not null %}
+                    {% if stats.targetDelta >= 0 %}
+                        <span class="pf-stat-sub is-positive">+{{ stats.targetDelta|number_format(1, ',', ' ') }}h vs contrat</span>
+                    {% else %}
+                        <span class="pf-stat-sub is-negative">{{ stats.targetDelta|number_format(1, ',', ' ') }}h vs contrat</span>
+                    {% endif %}
+                {% else %}
+                    <span class="pf-stat-sub">objectif non défini</span>
+                {% endif %}
+            </div>
+            <div class="pf-stat">
+                <span class="pf-stat-k">Moyenne / jour</span>
+                <span class="pf-stat-v num">{{ stats.avgHoursPerEntry|number_format(1, ',', ' ') }}h</span>
+                <span class="pf-stat-sub">par journée saisie</span>
+            </div>
+        </section>
+
+        {# ---------- Form + Account info ---------- #}
+        <section class="pf-cols">
+            <div class="ts-card">
+                <div>
+                    <div class="ts-card-eyebrow">Mes informations</div>
+                    <h2 class="ts-card-title">Identité & contrat</h2>
+                    <p class="ts-card-sub">Ces données alimentent le suivi de progression sur l'accueil.</p>
+                </div>
+
+                {{ form_start(userProfileForm, {attr: {class: 'flex flex-col gap-4'}}) }}
+                    {% if not userProfileForm.vars.valid %}
+                        <div class="flash flash-error">{{ form_errors(userProfileForm) }}</div>
+                    {% endif %}
+
+                    <div class="field-row">
+                        {{ form_row(userProfileForm.firstName) }}
+                        {{ form_row(userProfileForm.lastName) }}
+                    </div>
+                    {{ form_row(userProfileForm.jobTitle) }}
+                    <div class="field-row">
+                        {{ form_row(userProfileForm.contractType) }}
+                        {{ form_row(userProfileForm.weeklyHours) }}
+                    </div>
+                    {{ form_row(userProfileForm.contractStartDate) }}
+
+                    <button type="submit" class="btn-submit mt-2">
+                        <span>Enregistrer</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                {{ form_end(userProfileForm) }}
+            </div>
+
+            <div class="ts-card">
+                <div>
+                    <div class="ts-card-eyebrow">Compte</div>
+                    <h2 class="ts-card-title">Repères</h2>
+                </div>
+
+                <div class="kv">
+                    <div class="kv-row">
+                        <span class="kv-k">E-mail</span>
+                        <span class="kv-v">{{ user.email }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-k">Rôle</span>
+                        <span class="kv-v">{{ user.role.value|capitalize }}</span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-k">Compte créé</span>
+                        <span class="kv-v num">
+                            {% if user.createdAt %}{{ user.createdAt|date('d') }} {{ monthFr[user.createdAt|date('M')] }} {{ user.createdAt|date('Y') }}{% else %}—{% endif %}
+                        </span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-k">Première entrée</span>
+                        <span class="kv-v num">
+                            {% if stats.firstEntryDate %}{{ stats.firstEntryDate|date('d') }} {{ monthFr[stats.firstEntryDate|date('M')] }} {{ stats.firstEntryDate|date('Y') }}{% else %}<span class="muted">aucune</span>{% endif %}
+                        </span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-k">Dernière entrée</span>
+                        <span class="kv-v num">
+                            {% if stats.lastEntryDate %}{{ stats.lastEntryDate|date('d') }} {{ monthFr[stats.lastEntryDate|date('M')] }} {{ stats.lastEntryDate|date('Y') }}{% else %}<span class="muted">aucune</span>{% endif %}
+                        </span>
+                    </div>
+                    <div class="kv-row">
+                        <span class="kv-k">Email vérifié</span>
+                        <span class="kv-v">{{ user.verified ? 'Oui' : 'Non' }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock %}

@@ -2,10 +2,12 @@
 
 namespace App\Entity;
 
+use App\Enum\ContractType;
 use App\Enum\Roles;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -49,6 +51,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     private bool $isVerified = false;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $lastName = null;
+
+    #[ORM\Column(nullable: true, enumType: ContractType::class)]
+    private ?ContractType $contractType = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $weeklyHours = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTime $contractStartDate = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $jobTitle = null;
 
     public function __construct()
     {
@@ -194,5 +214,110 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isVerified = $isVerified;
 
         return $this;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(?string $firstName): static
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(?string $lastName): static
+    {
+        $this->lastName = $lastName;
+
+        return $this;
+    }
+
+    public function getContractType(): ?ContractType
+    {
+        return $this->contractType;
+    }
+
+    public function setContractType(?ContractType $contractType): static
+    {
+        $this->contractType = $contractType;
+
+        return $this;
+    }
+
+    public function getWeeklyHours(): ?float
+    {
+        return $this->weeklyHours;
+    }
+
+    public function setWeeklyHours(?float $weeklyHours): static
+    {
+        $this->weeklyHours = $weeklyHours;
+
+        return $this;
+    }
+
+    public function getContractStartDate(): ?\DateTime
+    {
+        return $this->contractStartDate;
+    }
+
+    public function setContractStartDate(?\DateTime $contractStartDate): static
+    {
+        $this->contractStartDate = $contractStartDate;
+
+        return $this;
+    }
+
+    public function getJobTitle(): ?string
+    {
+        return $this->jobTitle;
+    }
+
+    public function setJobTitle(?string $jobTitle): static
+    {
+        $this->jobTitle = $jobTitle;
+
+        return $this;
+    }
+
+    public function getFullName(): ?string
+    {
+        $parts = array_filter([$this->firstName, $this->lastName]);
+
+        return $parts !== [] ? implode(' ', $parts) : null;
+    }
+
+    public function getInitials(): string
+    {
+        if ($this->firstName || $this->lastName) {
+            return strtoupper(mb_substr($this->firstName ?? '', 0, 1) . mb_substr($this->lastName ?? '', 0, 1));
+        }
+
+        return strtoupper(mb_substr($this->email ?? '?', 0, 2));
+    }
+
+    /**
+     * Daily expected hours, assuming 5 working days per week.
+     */
+    public function getExpectedDailyHours(): ?float
+    {
+        return $this->weeklyHours !== null ? round($this->weeklyHours / 5, 2) : null;
+    }
+
+    public function isProfileComplete(): bool
+    {
+        return $this->firstName !== null
+            && $this->lastName !== null
+            && $this->contractType !== null
+            && $this->weeklyHours !== null
+            && $this->contractStartDate !== null;
     }
 }

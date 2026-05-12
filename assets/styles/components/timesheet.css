@@ -1,0 +1,206 @@
+@layer components {
+    .ts-shell {
+        @apply min-h-screen flex flex-col gap-10 px-10 py-8;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .ts-topbar {
+        @apply flex items-center justify-between gap-6;
+    }
+    .ts-brand {
+        @apply flex items-center gap-2.5 no-underline text-dark-font;
+    }
+    .ts-brand-mark {
+        @apply w-8 h-8 grid place-items-center rounded-full bg-dark-font text-light-font;
+    }
+    .ts-brand-text {
+        @apply font-instrument text-[22px] leading-none;
+        letter-spacing: -0.01em;
+    }
+
+    .ts-nav {
+        @apply flex items-center gap-1;
+    }
+    .ts-nav-link {
+        @apply px-3 py-1.5 rounded-full text-[13px] text-small-font no-underline transition-colors duration-150;
+    }
+    .ts-nav-link:hover {
+        @apply text-dark-font bg-paper-2;
+    }
+    .ts-nav-link.is-active {
+        @apply text-dark-font;
+        background: color-mix(in srgb, var(--color-dark-font) 8%, transparent);
+    }
+
+    .ts-userbox {
+        @apply flex items-center gap-3 text-[13px] text-small-font;
+    }
+    .ts-avatar {
+        @apply w-7 h-7 grid place-items-center rounded-full bg-accent text-light-font text-[11px] font-medium;
+        letter-spacing: 0.02em;
+    }
+
+    /* ---- Hero header with week + grand total ---- */
+    .ts-hero {
+        @apply flex flex-col gap-3;
+    }
+    .ts-hero-eyebrow {
+        @apply text-[11px] tracking-[0.16em] uppercase text-small-font;
+    }
+    .ts-hero-row {
+        @apply flex items-baseline justify-between gap-6 flex-wrap;
+    }
+    .ts-hero-title {
+        @apply font-instrument leading-none m-0;
+        font-size: clamp(48px, 6vw, 80px);
+        letter-spacing: -0.025em;
+    }
+    .ts-hero-title em {
+        @apply italic opacity-70;
+    }
+    .ts-hero-metrics {
+        @apply flex items-baseline gap-7;
+    }
+    .ts-metric-k {
+        @apply text-[11px] tracking-[0.16em] uppercase text-small-font block mb-1;
+    }
+    .ts-metric-v {
+        @apply font-instrument text-[32px] leading-none;
+    }
+
+    /* ---- Weekly grid (7 days at-a-glance) ---- */
+    .ts-week {
+        @apply grid gap-2;
+        grid-template-columns: repeat(7, 1fr);
+    }
+    .ts-day {
+        @apply flex flex-col gap-2 p-3.5 rounded-md border border-rule bg-card;
+        @apply transition-[border-color,background] duration-150 no-underline text-dark-font;
+        min-height: 110px;
+    }
+    .ts-day:hover {
+        @apply border-dark-font bg-paper-2;
+    }
+    .ts-day.is-today {
+        @apply border-dark-font;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-dark-font) 6%, transparent);
+    }
+    .ts-day.is-future {
+        @apply opacity-50 pointer-events-none;
+    }
+    .ts-day.is-selected {
+        @apply bg-dark-font text-light-font border-dark-font;
+    }
+    .ts-day.is-selected .ts-day-hours {
+        @apply text-light-font;
+    }
+    .ts-day.is-empty .ts-day-hours {
+        @apply text-small-font opacity-60;
+    }
+    .ts-day-head {
+        @apply flex justify-between items-baseline;
+    }
+    .ts-day-dow {
+        @apply text-[10px] tracking-[0.14em] uppercase font-medium opacity-65;
+    }
+    .ts-day-num {
+        @apply font-instrument text-2xl leading-none;
+    }
+    .ts-day-hours {
+        @apply num text-xl;
+        font-feature-settings: "tnum";
+    }
+    .ts-day-status {
+        @apply text-[10px] tracking-wide uppercase opacity-60 mt-auto;
+    }
+
+    /* ---- Two-column section: form + recent ---- */
+    .ts-cols {
+        @apply grid gap-8;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    }
+    .ts-card {
+        @apply bg-card border border-rule rounded-md p-7 flex flex-col gap-5;
+    }
+    .ts-card-eyebrow {
+        @apply text-[11px] tracking-[0.16em] uppercase text-small-font;
+    }
+    .ts-card-title {
+        @apply font-instrument text-3xl leading-none m-0;
+        letter-spacing: -0.015em;
+    }
+    .ts-card-sub {
+        @apply text-small-font text-[13px] m-0;
+    }
+
+    /* ---- Recent entries list ---- */
+    .ts-list {
+        @apply flex flex-col;
+    }
+    .ts-row {
+        @apply grid gap-4 items-center py-3 border-b border-rule-soft;
+        grid-template-columns: 80px 1fr 110px 70px 32px;
+    }
+    .ts-row:last-child {
+        @apply border-b-0;
+    }
+    .ts-row-date {
+        @apply num text-[13px] text-small-font;
+    }
+    .ts-row-date-strong {
+        @apply text-dark-font font-medium;
+    }
+    .ts-row-meta {
+        @apply text-[12.5px] text-small-font flex flex-col gap-0.5;
+    }
+    .ts-row-note {
+        @apply text-dark-font truncate;
+    }
+    .ts-row-hours {
+        @apply num text-right text-base text-dark-font;
+    }
+    .ts-row-badge {
+        @apply inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] tracking-wider uppercase font-medium;
+    }
+    .ts-badge-draft     { @apply bg-paper text-small-font border border-rule; }
+    .ts-badge-submitted { @apply bg-accent-soft text-accent border border-accent/30; }
+    .ts-badge-approved  { @apply bg-accent text-light-font; }
+    .ts-badge-review    { color: #b46e1c; background: #fcf1dc; border: 1px solid #e8c98a; }
+
+    .ts-row-actions {
+        @apply flex justify-end;
+    }
+    .ts-icon-btn {
+        @apply w-7 h-7 grid place-items-center rounded text-small-font bg-transparent cursor-pointer;
+        @apply transition-colors duration-150 border-0;
+    }
+    .ts-icon-btn:hover {
+        @apply text-warn bg-paper;
+    }
+    .ts-icon-btn-delete form {
+        @apply m-0 inline;
+    }
+
+    .ts-empty {
+        @apply text-center py-10 text-small-font text-[13px];
+    }
+
+    /* ---- Flash messages ---- */
+    .flash {
+        @apply text-[13px] px-3 py-2.5 rounded-md;
+    }
+    .flash-success {
+        @apply bg-accent-soft text-accent border border-accent/30;
+    }
+    .flash-error {
+        @apply text-warn bg-card border border-warn/20;
+    }
+
+    @media (max-width: 880px) {
+        .ts-cols { grid-template-columns: 1fr; }
+        .ts-week { grid-template-columns: repeat(4, 1fr); }
+        .ts-row { grid-template-columns: 70px 1fr 80px; }
+        .ts-row-badge, .ts-row-actions { display: none; }
+    }
+}

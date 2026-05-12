@@ -1,0 +1,27 @@
+{# Topbar partagée pour les pages authentifiées.
+   `active` est la clé de l'item courant : 'home' | 'profile' #}
+{% set active = active|default('') %}
+{% set currentRoute = app.request.attributes.get('_route') %}
+{% if active == '' %}
+    {% set active = currentRoute == 'app_profile' ? 'profile' : 'home' %}
+{% endif %}
+
+<header class="ts-topbar">
+    <a href="{{ path('app_home') }}" class="ts-brand">
+        <span class="ts-brand-mark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </span>
+        <span class="ts-brand-text">Tempo</span>
+    </a>
+
+    <nav class="ts-nav">
+        <a href="{{ path('app_home') }}" class="ts-nav-link {{ active == 'home' ? 'is-active' : '' }}">Heures</a>
+        <a href="{{ path('app_profile') }}" class="ts-nav-link {{ active == 'profile' ? 'is-active' : '' }}">Profil</a>
+    </nav>
+
+    <div class="ts-userbox">
+        <span class="ts-avatar" title="{{ app.user.fullName ?? app.user.userIdentifier }}">{{ app.user.initials }}</span>
+        <span class="dot">·</span>
+        <a href="{{ logout_path() }}" class="link-q">Se déconnecter</a>
+    </div>
+</header>

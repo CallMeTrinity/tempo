@@ -6,8 +6,12 @@ use App\Enum\Status;
 use App\Repository\TimeEntryRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TimeEntryRepository::class)]
+#[ORM\UniqueConstraint(name: 'unique_user_date', columns: ['user_id', 'date'])]
+#[UniqueEntity(fields: ['user', 'date'], message: 'Une entrée existe déjà pour cette journée.')]
 class TimeEntry
 {
     #[ORM\Id]
@@ -27,7 +31,8 @@ class TimeEntry
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTime $endTime = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(nullable: true, options: ['comment' => 'Pause en minutes'])]
+    #[Assert\PositiveOrZero(message: 'La pause doit être positive ou nulle.')]
     private ?int $breakDuration = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -153,5 +158,22 @@ class TimeEntry
         $this->status = $status;
 
         return $this;
+    }
+
+    /**
+     * Durée travaillée en heures décimales (ex: 7.5 = 7h30).
+     * breakDuration est exprimé en minutes.
+     */
+    public function getHoursWorked(): float
+    {
+        if ($this->startTime === null || $this->endTime === null) {
+            return 0.0;
+        }
+
+        $diffSeconds = $this->endTime->getTimestamp() - $this->startTime->getTimestamp();
+        $hours = $diffSeconds / 3600;
+        $breakHours = ($this->breakDuration ?? 0) / 60;
+
+        return max(0, round($hours - $breakHours, 2));
     }
 }
