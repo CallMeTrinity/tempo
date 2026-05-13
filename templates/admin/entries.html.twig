@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin · Validations · Tempo{% endblock %}
+
+{% block body %}
+    {% set monthFrShort = {'Jan': 'janv.', 'Feb': 'févr.', 'Mar': 'mars', 'Apr': 'avr.', 'May': 'mai', 'Jun': 'juin', 'Jul': 'juil.', 'Aug': 'août', 'Sep': 'sept.', 'Oct': 'oct.', 'Nov': 'nov.', 'Dec': 'déc.'} %}
+
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'admin'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">Administration</div>
+            <h1 class="ts-hero-title">
+                <span class="num">{{ pendingCount }}</span>
+                <em class="text-base">à valider</em>
+            </h1>
+        </section>
+
+        {% include 'admin/_subnav.html.twig' with {active: 'entries', pendingCount: pendingCount, unverifiedCount: unverifiedCount} only %}
+
+        {% if groups is empty %}
+            <section class="ts-card">
+                <div class="ts-empty">Aucune semaine en attente de validation. Belle soirée. ✨</div>
+            </section>
+        {% else %}
+            <section class="flex flex-col gap-6">
+                {% for group in groups %}
+                    {% set startLabel = group.weekStart|date('d') ~ ' ' ~ monthFrShort[group.weekStart|date('M')] %}
+                    {% set endLabel = group.weekEnd|date('d') ~ ' ' ~ monthFrShort[group.weekEnd|date('M')] ~ ' ' ~ group.weekEnd|date('Y') %}
+
+                    <article class="ts-card ts-weekgroup">
+                        <header class="ts-weekgroup-head">
+                            <div class="ts-table-user">
+                                <span class="ts-avatar">{{ group.user.initials }}</span>
+                                <div class="flex flex-col">
+                                    <a href="{{ path('app_admin_user_detail', {id: group.user.id, year: group.year, month: group.weekStart|date('n')}) }}" class="ts-table-user-name link-q no-underline">{{ group.user.fullName ?? group.user.email }}</a>
+                                    <span class="ts-table-user-meta">Semaine {{ group.week }} · {{ startLabel }} → {{ endLabel }}</span>
+                                </div>
+                            </div>
+                            <div class="ts-weekgroup-stats">
+                                <div>
+                                    <span class="ts-metric-k">Total</span>
+                                    <span class="ts-metric-v num">{{ group.totalHours|number_format(1, ',', ' ') }}h</span>
+                                </div>
+                                <div>
+                                    <span class="ts-metric-k">Jours</span>
+                                    <span class="ts-metric-v num">{{ group.daysCount }}</span>
+                                </div>
+                            </div>
+                            <div class="ts-weekgroup-actions">
+                                <form method="post" action="{{ path('app_admin_week_approve', {userId: group.user.id, year: group.year, week: group.week}) }}" class="inline">
+                                    <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('admin_week_' ~ group.user.id ~ '_' ~ group.year ~ '_' ~ group.week) }}">
+                                    <button class="ts-action ts-action-ok" type="submit">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                        Approuver la semaine
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('app_admin_week_review', {userId: group.user.id, year: group.year, week: group.week}) }}" class="inline">
+                                    <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('admin_week_' ~ group.user.id ~ '_' ~ group.year ~ '_' ~ group.week) }}">
+                                    <button class="ts-action" type="submit">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                                        Renvoyer la semaine
+                                    </button>
+                                </form>
+                            </div>
+                        </header>
+
+                        <div class="ts-weekgroup-list">
+                            {% for entry in group.entries %}
+                                <div class="ts-weekgroup-row">
+                                    <div class="ts-weekgroup-day">
+                                        <span class="num text-dark-font">{{ entry.date|date('d/m') }}</span>
+                                        <span class="block text-[11px] text-small-font">{{ entry.date|date('D')|replace({'Mon':'lun','Tue':'mar','Wed':'mer','Thu':'jeu','Fri':'ven','Sat':'sam','Sun':'dim'}) }}</span>
+                                    </div>
+                                    <div class="ts-row-meta">
+                                        {% if entry.dayType.value == 'worked' and entry.startTime and entry.endTime %}
+                                            <span>{{ entry.startTime|date('H:i') }} → {{ entry.endTime|date('H:i') }}
+                                                {% if entry.breakDuration %}· pause {{ entry.breakDuration }}min{% endif %}
+                                            </span>
+                                        {% else %}
+                                            <span>{{ entry.dayType.label }}</span>
+                                        {% endif %}
+                                        {% if entry.note %}<span class="ts-row-note">{{ entry.note }}</span>{% endif %}
+                                    </div>
+                                    <div class="ts-row-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</div>
+                                    <div class="ts-row-actions">
+                                        <form method="post" action="{{ path('app_admin_entry_approve', {id: entry.id}) }}" class="inline" title="Approuver ce jour uniquement">
+                                            <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('admin_action_' ~ entry.id) }}">
+                                            <button class="ts-icon-btn ts-icon-btn-ok" type="submit">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{{ path('app_admin_entry_review', {id: entry.id}) }}" class="inline" title="Renvoyer ce jour pour modification">
+                                            <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('admin_action_' ~ entry.id) }}">
+                                            <button class="ts-icon-btn" type="submit">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </section>
+        {% endif %}
+    </main>
+{% endblock %}

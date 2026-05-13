@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin · {{ user.fullName ?? user.email }} · Tempo{% endblock %}
+
+{% block body %}
+    {% set monthFr = {1:'janvier',2:'février',3:'mars',4:'avril',5:'mai',6:'juin',7:'juillet',8:'août',9:'septembre',10:'octobre',11:'novembre',12:'décembre'} %}
+
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'admin'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">
+                <a href="{{ path('app_admin_users') }}" class="link-q">← Équipe</a>
+                · Détail membre
+            </div>
+            <div class="ts-hero-row">
+                <div class="flex items-center gap-4">
+                    <span class="pf-avatar-lg">{{ user.initials }}</span>
+                    <div class="flex flex-col gap-1">
+                        <h1 class="ts-hero-title m-0" style="font-size:clamp(36px,4vw,52px)">{{ user.fullName ?? user.email }}</h1>
+                        <div class="text-small-font text-[13px]">
+                            {% if user.jobTitle %}{{ user.jobTitle }} · {% endif %}
+                            {% if user.contractType %}{{ user.contractType.label }} · {% endif %}
+                            {% if user.weeklyHours %}{{ user.weeklyHours|number_format(1, ',', ' ') }}h/semaine · {% endif %}
+                            {{ user.email }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% include 'admin/_subnav.html.twig' with {active: 'users', pendingCount: pendingCount, unverifiedCount: unverifiedCount} only %}
+
+        <section class="ts-month-head">
+            <h2 class="ts-card-title">{{ monthFr[month] }} {{ year }}</h2>
+            <nav class="ts-weeknav">
+                <a class="ts-weeknav-btn" href="{{ path('app_admin_user_detail', {id: user.id, year: prev.year, month: prev.month}) }}" rel="prev">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    <span>Mois précédent</span>
+                </a>
+                <a class="ts-weeknav-btn" href="{{ path('app_admin_user_detail', {id: user.id, year: next.year, month: next.month}) }}" rel="next">
+                    <span>Mois suivant</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </a>
+            </nav>
+        </section>
+
+        <section class="ts-month-stats">
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Heures du mois</span>
+                <span class="ts-month-stat-v">{{ stats.totalHours|number_format(1, ',', ' ') }}h</span>
+                <span class="ts-month-stat-sub">attendu {{ stats.expectedHours|number_format(1, ',', ' ') }}h</span>
+            </div>
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Jours saisis</span>
+                <span class="ts-month-stat-v">{{ stats.daysFilled }} / {{ stats.expectedWorkingDays }}</span>
+                <span class="ts-month-stat-sub">jours ouvrés contractuels</span>
+            </div>
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Heures sup.</span>
+                <span class="ts-month-stat-v {{ stats.overtimeHours > 0 ? 'is-positive' : '' }}">{{ stats.overtimeHours|number_format(1, ',', ' ') }}h</span>
+                <span class="ts-month-stat-sub">cumul mensuel</span>
+            </div>
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Déficit</span>
+                <span class="ts-month-stat-v">{{ stats.deficitHours|number_format(1, ',', ' ') }}h</span>
+                <span class="ts-month-stat-sub">à rattraper</span>
+            </div>
+        </section>
+
+        <section class="ts-card">
+            <div>
+                <div class="ts-card-eyebrow">60 dernières entrées</div>
+                <h2 class="ts-card-title">Historique</h2>
+            </div>
+
+            {% if recentEntries is empty %}
+                <div class="ts-empty">Aucune entrée saisie.</div>
+            {% else %}
+                <div class="ts-list">
+                    {% for entry in recentEntries %}
+                        <div class="ts-row">
+                            <div class="ts-row-date">
+                                <span class="ts-row-date-strong">{{ entry.date|date('d/m') }}</span>
+                                <span class="block opacity-60 text-[11px]">{{ entry.date|date('Y') }}</span>
+                            </div>
+                            <div class="ts-row-meta">
+                                {% if entry.dayType.value == 'worked' and entry.startTime and entry.endTime %}
+                                    <span>{{ entry.startTime|date('H:i') }} → {{ entry.endTime|date('H:i') }}
+                                        {% if entry.breakDuration %}· pause {{ entry.breakDuration }}min{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span>{{ entry.dayType.label }}</span>
+                                {% endif %}
+                                {% if entry.note %}<span class="ts-row-note">{{ entry.note }}</span>{% endif %}
+                            </div>
+                            <div class="ts-row-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</div>
+                            <div>
+                                {% set s = entry.status.value %}
+                                <span class="ts-row-badge ts-badge-{{ s == 'draft' ? 'draft' : (s == 'submitted' ? 'submitted' : (s == 'approved' ? 'approved' : 'review')) }}">
+                                    {{ entry.status.label }}
+                                </span>
+                            </div>
+                            <div class="ts-row-actions">
+                                {% if entry.status.value == 'submitted' %}
+                                    <form method="post" action="{{ path('app_admin_entry_approve', {id: entry.id}) }}" class="inline">
+                                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('admin_action_' ~ entry.id) }}">
+                                        <button class="ts-icon-btn ts-icon-btn-ok" title="Approuver" type="submit">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{{ path('app_admin_entry_review', {id: entry.id}) }}" class="inline">
+                                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('admin_action_' ~ entry.id) }}">
+                                        <button class="ts-icon-btn" title="Renvoyer pour modification" type="submit">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                                        </button>
+                                    </form>
+                                {% elseif entry.status.value == 'approved' %}
+                                    <form method="post" action="{{ path('app_admin_entry_review', {id: entry.id}) }}" class="inline" onsubmit="return confirm('Renvoyer cette entrée approuvée en revue ?');">
+                                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('admin_action_' ~ entry.id) }}">
+                                        <button class="ts-icon-btn" title="Renvoyer pour modification" type="submit">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

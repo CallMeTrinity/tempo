@@ -1,0 +1,72 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin · Équipe · Tempo{% endblock %}
+
+{% block body %}
+    {% set monthFr = {1:'janvier',2:'février',3:'mars',4:'avril',5:'mai',6:'juin',7:'juillet',8:'août',9:'septembre',10:'octobre',11:'novembre',12:'décembre'} %}
+
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'admin'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">Administration · {{ monthFr[month] }} {{ year }}</div>
+            <h1 class="ts-hero-title"><span>Équipe</span></h1>
+        </section>
+
+        {% include 'admin/_subnav.html.twig' with {active: 'users', pendingCount: pendingCount, unverifiedCount: unverifiedCount} only %}
+
+        <section class="ts-card">
+            {% if rows is empty %}
+                <div class="ts-empty">Aucun autre utilisateur.</div>
+            {% else %}
+                <div class="ts-table">
+                    <div class="ts-table-head">
+                        <div>Membre</div>
+                        <div>Contrat</div>
+                        <div class="ts-table-num">Mois {{ monthFr[month] }}</div>
+                        <div class="ts-table-num">Sup. / déficit</div>
+                        <div class="ts-table-num">Jours</div>
+                        <div></div>
+                    </div>
+
+                    {% for row in rows %}
+                        {% set u = row.user %}
+                        <div class="ts-table-row">
+                            <div class="ts-table-user">
+                                <span class="ts-avatar">{{ u.initials }}</span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="ts-table-user-name">
+                                        {{ u.fullName ?? u.email }}
+                                        {% if not u.isVerified %}
+                                            <span class="ts-row-badge ts-badge-review" title="Compte non validé">non vérifié</span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="ts-table-user-meta">{{ u.jobTitle ?? '—' }}</span>
+                                </div>
+                            </div>
+                            <div class="text-[12.5px] text-small-font">
+                                {% if u.contractType %}{{ u.contractType.label }}{% endif %}
+                                {% if u.weeklyHours %} · {{ u.weeklyHours|number_format(1, ',', ' ') }}h/sem.{% endif %}
+                            </div>
+                            <div class="ts-table-num num">{{ row.monthTotal|number_format(1, ',', ' ') }}h <span class="text-small-font text-[11px]">/ {{ row.expectedHours|number_format(1, ',', ' ') }}h</span></div>
+                            <div class="ts-table-num num">
+                                {% if row.overtime > 0 %}
+                                    <span class="is-positive">+{{ row.overtime|number_format(1, ',', ' ') }}h</span>
+                                {% elseif row.deficit > 0 %}
+                                    <span class="is-negative">−{{ row.deficit|number_format(1, ',', ' ') }}h</span>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                            <div class="ts-table-num num">{{ row.daysFilled }} / {{ row.expectedDays }}</div>
+                            <div class="ts-table-actions">
+                                <a class="link-q" href="{{ path('app_admin_user_detail', {id: u.id}) }}">Détails →</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

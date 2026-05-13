@@ -303,6 +303,22 @@
         outline-offset: 2px;
     }
 
+    /* ---- Submit-week banner ---- */
+    .ts-weeksubmit {
+        @apply flex items-center justify-between gap-4 flex-wrap;
+        @apply px-5 py-4 rounded-md border border-accent/30;
+        background: color-mix(in srgb, var(--color-accent) 6%, var(--color-card));
+    }
+    .ts-weeksubmit-text {
+        @apply flex items-baseline gap-2;
+    }
+    .ts-weeksubmit-count {
+        @apply font-instrument text-2xl leading-none text-accent;
+    }
+    .ts-weeksubmit-label {
+        @apply text-[13.5px] text-dark-font;
+    }
+
     /* ---- Multi-choice pills (checkboxes, e.g. defaultRemoteDays) ---- */
     .ts-choices {
         @apply flex flex-wrap gap-1.5;
@@ -386,6 +402,10 @@
         @apply inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-medium;
         @apply bg-accent text-light-font;
     }
+    .ts-subnav-pill.ts-subnav-pill-warn {
+        background: #b46e1c;
+        color: var(--color-light-font);
+    }
 
     /* ---- Admin: data table ---- */
     .ts-table {
@@ -426,6 +446,40 @@
         grid-template-columns: 80px minmax(180px, 1.4fr) minmax(140px, 1fr) 80px 240px;
     }
 
+    /* Admin moderation rows (no hours, no badge column) */
+    .ts-row.ts-row-account {
+        grid-template-columns: minmax(220px, 1.6fr) minmax(160px, 1fr) auto;
+    }
+    .ts-row.ts-row-blacklist {
+        grid-template-columns: minmax(220px, 1.6fr) minmax(160px, 1fr) auto;
+    }
+
+    /* Admin pending: week-grouped cards */
+    .ts-weekgroup-head {
+        @apply flex items-center justify-between gap-5 flex-wrap pb-4;
+        border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .ts-weekgroup-stats {
+        @apply flex items-baseline gap-6;
+    }
+    .ts-weekgroup-actions {
+        @apply flex items-center gap-2 flex-wrap;
+    }
+    .ts-weekgroup-list {
+        @apply flex flex-col;
+    }
+    .ts-weekgroup-row {
+        @apply grid gap-4 items-center py-2.5 text-[13px];
+        grid-template-columns: 70px minmax(140px, 1fr) 80px 90px;
+        border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .ts-weekgroup-row:last-child {
+        border-bottom: 0;
+    }
+    .ts-weekgroup-day {
+        @apply flex flex-col text-[13px];
+    }
+
     /* ---- Admin action buttons ---- */
     .ts-action {
         @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] cursor-pointer;
@@ -439,6 +493,15 @@
     .ts-action-ok:hover {
         @apply bg-accent text-light-font;
         opacity: 0.92;
+    }
+    .ts-action-warn {
+        color: var(--color-warn);
+        border-color: color-mix(in srgb, var(--color-warn) 30%, transparent);
+        background: color-mix(in srgb, var(--color-warn) 6%, var(--color-card));
+    }
+    .ts-action-warn:hover {
+        background: color-mix(in srgb, var(--color-warn) 12%, var(--color-card));
+        border-color: var(--color-warn);
     }
     .ts-icon-btn-ok:hover {
         color: var(--color-accent);

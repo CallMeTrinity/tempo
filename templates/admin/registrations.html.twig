@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin · Comptes · Tempo{% endblock %}
+
+{% block body %}
+    {% set monthFrShort = {'Jan': 'janv.', 'Feb': 'févr.', 'Mar': 'mars', 'Apr': 'avr.', 'May': 'mai', 'Jun': 'juin', 'Jul': 'juil.', 'Aug': 'août', 'Sep': 'sept.', 'Oct': 'oct.', 'Nov': 'nov.', 'Dec': 'déc.'} %}
+
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'admin'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">Administration · Modération des comptes</div>
+            <h1 class="ts-hero-title">
+                <span class="num">{{ pendingUsers|length }}</span>
+                <em class="text-base">à valider</em>
+            </h1>
+        </section>
+
+        {% include 'admin/_subnav.html.twig' with {active: 'registrations', pendingCount: pendingCount, unverifiedCount: unverifiedCount} only %}
+
+        {# ---------- Pending registrations ---------- #}
+        <section class="ts-card">
+            <div>
+                <div class="ts-card-eyebrow">En attente</div>
+                <h2 class="ts-card-title">Nouveaux comptes</h2>
+                <p class="ts-card-sub">Approuver pour passer le compte en vérifié. Refuser supprime le compte et ajoute l'email à la liste noire.</p>
+            </div>
+
+            {% if pendingUsers is empty %}
+                <div class="ts-empty">Aucun compte en attente de validation. ✨</div>
+            {% else %}
+                <div class="ts-list">
+                    {% for u in pendingUsers %}
+                        <div class="ts-row ts-row-account">
+                            <div class="ts-table-user">
+                                <span class="ts-avatar">{{ u.initials }}</span>
+                                <div class="flex flex-col">
+                                    <span class="ts-table-user-name">{{ u.fullName ?? u.email }}</span>
+                                    <span class="ts-table-user-meta">{{ u.email }}</span>
+                                </div>
+                            </div>
+                            <div class="text-[12.5px] text-small-font">
+                                {% if u.createdAt %}
+                                    Créé le {{ u.createdAt|date('d') }} {{ monthFrShort[u.createdAt|date('M')] }} {{ u.createdAt|date('Y') }}
+                                {% endif %}
+                            </div>
+                            <div class="ts-row-actions">
+                                <form method="post" action="{{ path('app_admin_account_approve', {id: u.id}) }}" class="inline">
+                                    <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('account_action_' ~ u.id) }}">
+                                    <button class="ts-action ts-action-ok" type="submit">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                        Approuver
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('app_admin_account_reject', {id: u.id}) }}" class="inline"
+                                      onsubmit="return confirm('Refuser ce compte ? L\'utilisateur sera supprimé et son email mis en blacklist.');">
+                                    <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('account_action_' ~ u.id) }}">
+                                    <button class="ts-action ts-action-warn" type="submit">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                        Refuser
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+
+        {# ---------- Blacklist ---------- #}
+        <section class="ts-card">
+            <div>
+                <div class="ts-card-eyebrow">Liste noire</div>
+                <h2 class="ts-card-title">Emails refusés</h2>
+                <p class="ts-card-sub">Ces emails ne peuvent plus créer de compte. Retirer un email permet à nouveau l'inscription.</p>
+            </div>
+
+            {% if blacklisted is empty %}
+                <div class="ts-empty">Aucun email en liste noire.</div>
+            {% else %}
+                <div class="ts-list">
+                    {% for b in blacklisted %}
+                        <div class="ts-row ts-row-blacklist">
+                            <div>
+                                <span class="text-dark-font font-medium">{{ b.email }}</span>
+                                {% if b.reason %}
+                                    <span class="block text-[11.5px] text-small-font">{{ b.reason }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-[12.5px] text-small-font">
+                                {{ b.blacklistedAt|date('d') }} {{ monthFrShort[b.blacklistedAt|date('M')] }} {{ b.blacklistedAt|date('Y') }}
+                            </div>
+                            <div class="ts-row-actions">
+                                <form method="post" action="{{ path('app_admin_blacklist_remove', {id: b.id}) }}" class="inline"
+                                      onsubmit="return confirm('Retirer cet email de la liste noire ?');">
+                                    <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('blacklist_remove_' ~ b.id) }}">
+                                    <button class="link-q" type="submit">Retirer</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

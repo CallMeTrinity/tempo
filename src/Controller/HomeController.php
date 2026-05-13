@@ -65,20 +65,21 @@ class HomeController extends AbstractController
         $isEdit = $existing !== null;
         $timeEntry = $isEdit ? $existing : $this->buildPrefilledEntry($user, $selectedDate);
 
-        // Si l'entrée existante est non-travaillée (PTO/UTO/OFF), on n'affiche
-        // pas le formulaire de saisie : c'est un jour planifié, à supprimer
-        // d'abord pour le rouvrir à la saisie.
+        // Lock de workflow : SUBMITTED ou APPROVED n'est plus éditable par l'user.
+        $isReadOnly = $isEdit && !$timeEntry->getStatus()->isEditableByUser();
+        // Jour planifié non-travaillé (PTO/UTO/OFF) : pas de form de saisie.
         $isPlannedNonWork = $isEdit && in_array(
             $timeEntry->getDayType(),
             [DayType::PTO, DayType::UTO, DayType::OFF],
             true,
         );
+        $showForm = !$isReadOnly && !$isPlannedNonWork;
 
         $form = $this->createForm(TimeEntryType::class, $timeEntry);
         $form->get('isRemote')->setData($timeEntry->getDayType() === DayType::REMOTE);
         $form->handleRequest($request);
 
-        if (!$isPlannedNonWork && $form->isSubmitted() && $form->isValid()) {
+        if ($showForm && $form->isSubmitted() && $form->isValid()) {
             $timeEntry->setUpdatedAt(new \DateTimeImmutable());
             if (!$isEdit) {
                 $em->persist($timeEntry);
@@ -102,9 +103,13 @@ class HomeController extends AbstractController
         ));
 
         $weekEntries = [];
+        $weekSubmittableCount = 0;
         foreach ($weekCells as $cell) {
             if ($cell['entry'] !== null) {
                 $weekEntries[] = $cell['entry'];
+                if ($cell['entry']->getStatus()->canBeSubmittedByUser()) {
+                    ++$weekSubmittableCount;
+                }
             }
         }
         $weekStats = $timesheet->computeWeeklyStats($user, $weekEntries);
@@ -126,6 +131,8 @@ class HomeController extends AbstractController
             'planningForm' => $planningForm,
             'isEdit' => $isEdit,
             'isPlannedNonWork' => $isPlannedNonWork,
+            'isReadOnly' => $isReadOnly,
+            'showForm' => $showForm,
             'currentEntry' => $isEdit ? $timeEntry : null,
             'selectedDate' => $selectedDate,
             'weekStart' => $weekStart,
@@ -139,6 +146,8 @@ class HomeController extends AbstractController
             'daysWorked' => $weekStats['daysWorked'],
             'recentEntries' => array_slice($allEntries, 0, 10),
             'grandTotal' => $grandTotal,
+            'weekIso' => $weekStart->format('o-\WW'),
+            'weekSubmittableCount' => $weekSubmittableCount,
         ]);
     }
 
@@ -148,9 +157,12 @@ class HomeController extends AbstractController
         if ($entry->getUser() !== $this->getUser()) {
             throw $this->createAccessDeniedException();
         }
-
         if (!$this->isCsrfTokenValid('delete_entry_' . $entry->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('CSRF invalide.');
+        }
+        if (!$entry->getStatus()->isEditableByUser()) {
+            $this->addFlash('error', 'Cette entrée ne peut plus être supprimée (statut « ' . $entry->getStatus()->getLabel() . ' »).');
+            return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_home'));
         }
 
         $em->remove($entry);
@@ -159,6 +171,87 @@ class HomeController extends AbstractController
         $this->addFlash('success', 'Entrée supprimée.');
 
         return $this->redirectToRoute('app_home');
+    }
+
+    #[Route('/time-entry/{id}/unsubmit', name: 'app_time_entry_unsubmit', methods: ['POST'])]
+    public function unsubmit(TimeEntry $entry, Request $request, EntityManagerInterface $em): Response
+    {
+        if ($entry->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
+        if (!$this->isCsrfTokenValid('unsubmit_entry_' . $entry->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF invalide.');
+        }
+        if (!$entry->getStatus()->canBeUnsubmittedByUser()) {
+            $this->addFlash('error', 'Cette entrée ne peut plus être retirée (statut « ' . $entry->getStatus()->getLabel() . ' »).');
+        } else {
+            $entry->setStatus(Status::DRAFT)->setUpdatedAt(new \DateTimeImmutable());
+            $em->flush();
+            $this->addFlash('success', 'Entrée du ' . $entry->getDate()->format('d/m/Y') . ' remise en brouillon.');
+        }
+
+        return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_home'));
+    }
+
+    /**
+     * Soumet en bloc toutes les entrées éditables (DRAFT/TO_BE_REVIEWED) de la
+     * semaine indiquée. Le paramètre `week=YYYY-Wnn` cible la semaine ISO.
+     */
+    #[Route('/week/submit', name: 'app_week_submit', methods: ['POST'])]
+    public function submitWeek(
+        Request $request,
+        EntityManagerInterface $em,
+        TimeEntryRepository $repo,
+        TimesheetService $timesheet,
+    ): Response {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if ($user->isAdmin()) {
+            $this->addFlash('error', 'Un admin ne soumet pas ses heures.');
+            return $this->redirectToRoute('app_home');
+        }
+
+        if (!$this->isCsrfTokenValid('submit_week_' . $user->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF invalide.');
+        }
+
+        $weekParam = (string) $request->request->get('week', '');
+        $weekStart = $this->resolveWeekStart($weekParam);
+        if ($weekStart === null) {
+            $weekStart = $timesheet->normalizeMonday(new DateTime('today'));
+        }
+        $weekEnd = $weekStart->modify('+6 days');
+
+        $entries = $repo->findByUserBetween(
+            $user,
+            DateTime::createFromImmutable($weekStart),
+            DateTime::createFromImmutable($weekEnd),
+        );
+
+        $submitted = 0;
+        $skipped = 0;
+        foreach ($entries as $entry) {
+            if ($entry->getStatus()->canBeSubmittedByUser()) {
+                $entry->setStatus(Status::SUBMITTED)->setUpdatedAt(new \DateTimeImmutable());
+                ++$submitted;
+            } else {
+                ++$skipped;
+            }
+        }
+        $em->flush();
+
+        if ($submitted === 0) {
+            $this->addFlash('info', 'Aucune entrée à soumettre dans cette semaine.');
+        } else {
+            $msg = $submitted . ' entrée' . ($submitted > 1 ? 's' : '') . ' soumise' . ($submitted > 1 ? 's' : '') . ' pour validation.';
+            if ($skipped > 0) {
+                $msg .= ' (' . $skipped . ' déjà ' . ($skipped > 1 ? 'soumises ou approuvées' : 'soumise ou approuvée') . ')';
+            }
+            $this->addFlash('success', $msg);
+        }
+
+        return $this->redirectToRoute('app_home', ['week' => $weekStart->format('o-\WW')]);
     }
 
     private function resolveSelectedDate(?string $raw): DateTime

@@ -22,12 +22,16 @@ class DayPlanningType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
 
+        $plannableTypes = [DayType::REMOTE, DayType::PTO, DayType::UTO, DayType::OFF];
+
         $builder
             ->add('dayType', EnumType::class, [
                 'class' => DayType::class,
                 'label' => 'Type',
                 'required' => true,
+                'expanded' => true,
                 'multiple' => false,
+                'choices' => $plannableTypes,
                 'choice_label' => fn (DayType $d) => $d->getLabel(),
                 'attr' => ['class' => 'ts-segmented'],
                 'constraints' => [new Assert\NotNull()],

@@ -1,0 +1,25 @@
+{# Sous-navigation de l'espace admin.
+   Paramètres :
+     - active : 'users' | 'entries' | 'registrations'
+     - pendingCount    : nb d'entrées SUBMITTED (queue d'approbation)
+     - unverifiedCount : nb de comptes en attente de validation (optionnel) #}
+{% set active = active|default('') %}
+{% set unverifiedCount = unverifiedCount|default(0) %}
+
+<nav class="ts-subnav" aria-label="Navigation administration">
+    <a href="{{ path('app_admin_users') }}" class="ts-subnav-link {{ active == 'users' ? 'is-active' : '' }}">
+        Équipe
+    </a>
+    <a href="{{ path('app_admin_entries') }}" class="ts-subnav-link {{ active == 'entries' ? 'is-active' : '' }}">
+        À valider
+        {% if pendingCount is defined and pendingCount > 0 %}
+            <span class="ts-subnav-pill">{{ pendingCount }}</span>
+        {% endif %}
+    </a>
+    <a href="{{ path('app_admin_registrations') }}" class="ts-subnav-link {{ active == 'registrations' ? 'is-active' : '' }}">
+        Comptes
+        {% if unverifiedCount > 0 %}
+            <span class="ts-subnav-pill ts-subnav-pill-warn">{{ unverifiedCount }}</span>
+        {% endif %}
+    </a>
+</nav>

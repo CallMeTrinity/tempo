@@ -5,37 +5,42 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Enum\Roles;
 use App\Form\RegistrationFormType;
-use App\Security\EmailVerifier;
+use App\Repository\BlacklistedEmailRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 class RegistrationController extends AbstractController
 {
-    public function __construct(private readonly EmailVerifier $emailVerifier)
-    {
-    }
-
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager, Security $security): Response
-    {
+    public function register(
+        Request $request,
+        UserPasswordHasherInterface $userPasswordHasher,
+        EntityManagerInterface $entityManager,
+        BlacklistedEmailRepository $blacklist,
+        Security $security,
+    ): Response {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Blacklist check : un email refusé par un admin ne peut pas
+            // recréer de compte.
+            if ($blacklist->existsByEmail((string) $user->getEmail())) {
+                $this->addFlash('error', 'Cette adresse email ne peut pas être utilisée pour créer un compte. Contactez un administrateur.');
+
+                return $this->render('registration/register.html.twig', [
+                    'registrationForm' => $form,
+                ]);
+            }
+
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
-
-            // encode the plain password
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
             $firstName = substr($user->getEmail(), 0, strpos($user->getEmail(), '.'));
@@ -45,6 +50,9 @@ class RegistrationController extends AbstractController
             $user->setUsername($username);
 
             $user->setRole(Roles::USER);
+            // isVerified représente la validation admin. Tant qu'un admin n'a
+            // pas approuvé le compte, isVerified reste à false (mais l'utilisateur
+            // peut quand même se connecter et utiliser la plateforme).
             $user->setIsVerified(false);
             $user->setCreatedAt(new \DateTimeImmutable());
             $user->setUpdatedAt(new \DateTimeImmutable());
@@ -52,44 +60,15 @@ class RegistrationController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
 
-            // generate a signed url and email it to the user
-            $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
-                new TemplatedEmail()
-                    ->from(new Address('no-reply@local.com', 'Sgt. Bot'))
-                    ->to((string) $user->getEmail())
-                    ->subject('Please Confirm your Email')
-                    ->htmlTemplate('registration/confirmation_email.html.twig')
-            );
-
             $security->login($user);
 
-            return  $this->redirectToRoute('app_home');
+            $this->addFlash('info', 'Compte créé. Un administrateur validera votre compte sous peu.');
+
+            return $this->redirectToRoute('app_home');
         }
 
         return $this->render('registration/register.html.twig', [
             'registrationForm' => $form,
         ]);
-    }
-
-    #[Route('/verify/email', name: 'app_verify_email')]
-    public function verifyUserEmail(Request $request, TranslatorInterface $translator): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-
-        // validate email confirmation link, sets User::isVerified=true and persists
-        try {
-            /** @var User $user */
-            $user = $this->getUser();
-            $this->emailVerifier->handleEmailConfirmation($request, $user);
-        } catch (VerifyEmailExceptionInterface $exception) {
-            $this->addFlash('verify_email_error', $translator->trans($exception->getReason(), [], 'VerifyEmailBundle'));
-
-            return $this->redirectToRoute('app_register');
-        }
-
-        // @TODO Change the redirect on success and handle or remove the flash message in your templates
-        $this->addFlash('success', 'Your email address has been verified.');
-
-        return $this->redirectToRoute('app_register');
     }
 }

@@ -60,6 +60,7 @@ class PlanningController extends AbstractController
         $created = 0;
         $overwritten = 0;
         $skippedWorked = 0;
+        $skippedLocked = 0;
         $skippedWeekend = 0;
         $skippedBeforeContract = 0;
 
@@ -76,10 +77,14 @@ class PlanningController extends AbstractController
                 ++$skippedBeforeContract;
             } elseif (isset($existingByKey[$key])) {
                 $existing = $existingByKey[$key];
-                // On n'écrase JAMAIS une saisie réelle (WORKED avec horaires).
-                // Les autres types planifiés (REMOTE/PTO/UTO/OFF) sont remplacés.
+                // Règle d'écrasement :
+                //  - WORKED : on préserve toujours (heures réelles)
+                //  - status verrouillé (SUBMITTED/APPROVED) : on préserve
+                //  - sinon (DRAFT/TO_BE_REVIEWED en non-WORKED) : on remplace
                 if ($existing->getDayType() === DayType::WORKED) {
                     ++$skippedWorked;
+                } elseif (!$existing->getStatus()->isEditableByUser()) {
+                    ++$skippedLocked;
                 } else {
                     $existing
                         ->setDayType($type)
@@ -118,6 +123,9 @@ class PlanningController extends AbstractController
         }
         if ($skippedWorked > 0) {
             $details[] = $skippedWorked . ' jour' . ($skippedWorked > 1 ? 's' : '') . ' travaillé' . ($skippedWorked > 1 ? 's' : '') . ' conservé' . ($skippedWorked > 1 ? 's' : '');
+        }
+        if ($skippedLocked > 0) {
+            $details[] = $skippedLocked . ' soumis/approuvé' . ($skippedLocked > 1 ? 's' : '') . ' conservé' . ($skippedLocked > 1 ? 's' : '');
         }
         if ($skippedWeekend > 0) {
             $details[] = $skippedWeekend . ' week-end' . ($skippedWeekend > 1 ? 's' : '');
