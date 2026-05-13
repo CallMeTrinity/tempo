@@ -70,6 +70,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $jobTitle = null;
 
+    #[ORM\Column(options: ['default' => 5])]
+    private ?int $workingDaysPerWeek = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?array $defaultRemoteDays = null;
+
     public function __construct()
     {
         $this->timeEntries = new ArrayCollection();
@@ -309,7 +315,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getExpectedDailyHours(): ?float
     {
-        return $this->weeklyHours !== null ? round($this->weeklyHours / 5, 2) : null;
+        return $this->weeklyHours !== null ? round($this->weeklyHours / $this->workingDaysPerWeek, 2) : null;
     }
 
     public function isProfileComplete(): bool
@@ -318,6 +324,38 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             && $this->lastName !== null
             && $this->contractType !== null
             && $this->weeklyHours !== null
-            && $this->contractStartDate !== null;
+            && $this->contractStartDate !== null
+            && $this->jobTitle !== null;
+    }
+
+    public function getWorkingDaysPerWeek(): ?int
+    {
+        return $this->workingDaysPerWeek;
+    }
+
+    public function setWorkingDaysPerWeek(int $workingDaysPerWeek): static
+    {
+        $this->workingDaysPerWeek = $workingDaysPerWeek;
+
+        return $this;
+    }
+
+    public function getDefaultRemoteDays(): ?array
+    {
+        return $this->defaultRemoteDays;
+    }
+
+    public function setDefaultRemoteDays(?array $defaultRemoteDays): static
+    {
+        $this->defaultRemoteDays = $defaultRemoteDays;
+
+        return $this;
+    }
+
+    public function isContractActive(\DateTimeInterface $date): bool
+    {
+        return $this->contractType !== null
+            && $this->contractStartDate !== null
+            && $this->contractStartDate <= $date;
     }
 }

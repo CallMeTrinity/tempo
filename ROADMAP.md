@@ -14,130 +14,127 @@
 
 ---
 
-## Phase 1 — Infrastructure & Setup
+## Phase 1 — Modèle de données
 
-### 1.1 Docker
-- [ ] `docker-compose.yml` : services `app` (PHP-FPM), `nginx`, `mariadb`
-- [ ] `docker/nginx/default.conf`
-- [ ] `docker/php/Dockerfile`
-- [ ] `.env` avec `DATABASE_URL` pointant vers MariaDB
-- [ ] `.env.local` (ignoré par git) pour les secrets
+Nouveaux types
+- src/Enum/DayType.php : enum avec cases WORKED, REMOTE, PTO, OFF + getLabel() FR
 
-### 1.2 Projet Symfony
-- [ ] `composer create-project symfony/skeleton:"8.0.*"`
-- [ ] Installer les bundles : `orm`, `twig`, `security`, `form`, `validator`, `mailer`
-- [ ] `composer require symfony/asset-mapper` (AssetMapper recommandé en Symfony 8, Webpack Encore déprécié)
-- [ ] Configurer `config/packages/doctrine.yaml (Symfony 8 supporte aussi la config PHP — tableaux natifs avec autocomplétion, à préférer si l'équipe est à l'aise)`
-- [ ] Vérifier la connexion DB : `php bin/console doctrine:schema:validate`
+TimeEntry
+- Ajouter #[ORM\Column(enumType: DayType::class)] private DayType $type = DayType::WORKED;
+- Rendre startTime/endTime/breakDuration nullable (les jours REMOTE/PTO/OFF n'en ont pas besoin)
 
----
+User
+- #[ORM\Column] private int $workingDaysPerWeek = 5;
+- #[ORM\Column(type: Types::JSON)] private array $defaultRemoteDays = []; (stockera les iso-weekdays 1-7, ex : [3] pour mercredi)
 
-## Phase 2 — Modélisation & Entités
+Migration
+- make:migration puis migrations:migrate
 
-### Entités à créer
+  ---                                                                                                                                                                                                                                                                                                                  
+## Phase 2 — Logique métier
 
-#### `User`
-- `id`, `email`, `password` (hashé), `roles` (array), `firstName`, `lastName`
-- `googleId` (nullable, pour OAuth)
-- `createdAt`, `updatedAt`
-- Relations : `OneToMany → TimeEntry`
+TimeEntry::getHoursWorked()
+- Si type = WORKED → calcul actuel (endTime - startTime - break/60)
+- Si type = REMOTE ou PTO → return user.expectedDailyHours
+- Si type = OFF → return 0
 
-#### `TimeEntry`
-- `id`
-- `user` (ManyToOne → User)
-- `date` (DateType)
-- `startTime` (TimeType)
-- `endTime` (TimeType)
-- `breakDuration` (integer, minutes)
-- `note` (text, nullable)
-- `status` (enum : `draft`, `submitted`, `approved`)
-- `createdAt`, `updatedAt`
+User helpers à ajouter
+```php
+getExpectedDailyHours(): ?float  // weeklyHours / workingDaysPerWeek (déjà existant, à corriger pour utiliser workingDaysPerWeek)                                                                                                                                                                                      
+isContractActive(\DateTimeInterface $date): bool  // date >= contractStartDate                                                                                                                                                                                                                                       
+getDefaultRemoteWeekdays(): array  // accesseur sécurisé
+```
+Nouveau service src/Service/TimesheetService.php (sortir la logique du controller)   
+```php
 
-#### `Project` (optionnel mais utile)
-- `id`, `name`, `description`, `color`
-- `isActive` (bool)
-- Relation : `ManyToMany → User` (assignation), `OneToMany → TimeEntry`
+buildWeekView(User $user, \DateTime $weekStart): array                                                                                                                                                                                                                                                                 
+// retourne 7 cells : date, entry|null, isWorkingDay, isFuture, isBeforeContract, isPredefinedRemote
 
-### Fichiers
-- [ ] `src/Entity/User.php`
-- [ ] `src/Entity/TimeEntry.php`
-- [ ] `src/Entity/Project.php`
-- [ ] Migrations : `php bin/console make:migration` puis `doctrine:migrations:migrate`
+computeWeeklyStats(User $user, array $entries): array                                                                                                                                                                                                                                                                  
+// retourne: workedHours, overtimeHours, deficitHours, daysWorked, progress%
 
----
+computeMonthlyStats(User $user, int $year, int $month): array                                                                                                                                                                                                                                                          
+// total mois, jours saisis, jours attendus, overtime cumulé
+```
+TimeEntryRepository
+- ```findByUserForMonth(User $user, int $year, int $month): array```
 
-## Phase 3 — Authentification
+  ---                                                                                                                                                                                                                                                                                                                  
+## Phase 3 — Formulaires
 
-### 3.1 Auth locale
-- [ ] Configurer `config/packages/security.yaml` (provider, firewall, hashing)
-- [ ] `src/Controller/SecurityController.php` (login, logout)
-- [ ] `templates/security/login.html.twig`
-- [ ] `src/Form/RegistrationFormType.php`
-- [ ] `src/Controller/RegistrationController.php`
-- [ ] `templates/registration/register.html.twig`
+TimeEntryType
+- Ajouter type (EnumType avec DayType)
+- Mettre startTime/endTime/breakDuration en required => false
+- Validation côté Entity : si type === WORKED alors start/end requis (contrainte Assert\Callback)
 
-### 3.2 Google OAuth (local)
-> Nécessite un projet Google Cloud avec `http://localhost` en redirect URI autorisée.
+UserProfileType
+- workingDaysPerWeek : IntegerType (min 1, max 7)
+- defaultRemoteDays : ChoiceType multiple avec choix [Lundi => 1, Mardi => 2, ..., Dimanche => 7], expanded: true, multiple: true (cases à cocher)
 
-- [ ] Installer `hwi/oauth-bundle`
-- [ ] `config/packages/hwi_oauth.yaml`
-- [ ] Ajouter `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.local`
-- [ ] `src/Security/GoogleAuthenticator.php` (ou utiliser le UserProvider HWI)
-- [ ] Bouton "Se connecter avec Google" dans le template login
+  ---                                                                                                                                                                                                                                                                                                                    
+## Phase 4 — Controller
 
----
+HomeController::home()
+1. Lire ?week=YYYY-Wnn (format ISO) en plus de ?date=
+    - Si absent → semaine en cours
+    - Calcul du lundi de la semaine demandée
 
-## Phase 4 — Gestion des fiches horaires (CRUD)
+2. Refuser une date < user.contractStartDate
+    - Si demandée → flash error + redirect semaine du contractStart
 
-### 4.1 Saisie
-- [ ] `src/Form/TimeEntryType.php` (champs : date, startTime, endTime, breakDuration, note, project)
-- [ ] `src/Controller/TimeEntryController.php`
-    - `GET/POST /entries/new` — création
-    - `GET/POST /entries/{id}/edit` — édition
-    - `DELETE /entries/{id}` — suppression
-    - `GET /entries` — liste de l'utilisateur connecté
-- [ ] Templates :
-    - `templates/time_entry/index.html.twig`
-    - `templates/time_entry/new.html.twig`
-    - `templates/time_entry/edit.html.twig`
+3. Pour la semaine affichée, pré-remplir (en mémoire, pas en DB) les jours qui sont                                                                                                                                                                                                                                    
+   dans defaultRemoteDays et qui n'ont pas encore d'entrée → entries virtuelles affichables
+    - L'utilisateur peut les confirmer/modifier (création réelle en DB au submit)
 
-### 4.2 Calculs automatiques
-- [ ] `src/Service/TimeCalculatorService.php`
-    - Durée nette = (endTime - startTime) - breakDuration
-    - Heures supplémentaires (si > 8h/jour)
-    - Total semaine/mois
+4. Calculer overtime via TimesheetService et passer au template
 
-### 4.3 Soumission & validation
-- [ ] Workflow simple : `draft → submitted → approved`
-- [ ] Action `submit` dans le controller (change le status)
-- [ ] Rôle `ROLE_MANAGER` peut approuver les fiches
+Nouvelle route   
+```php
+#[Route('/month/{year<\d{4}>}/{month<\d{1,2}>}', name: 'app_month')]                                                                                                                                                                                                                                                   
+public function month(int $year, int $month, ...): Response
+```
+TimeEntryType form handling
+- Si type !== WORKED au submit : forcer start/end/break à null avant persist
+- Pré-remplir startTime/endTime/breakDuration depuis user.expectedDailyHours quand type === WORKED et qu'on est en création
 
----
+  ---                                                                                                                                                                                                                                                                                                                    
+## Phase 5 — UI / Templates
 
-## Phase 5 — Dashboard & Statistiques
+Nouveau composant templates/components/week_nav.html.twig                                                                                                                                                                                                                                                            
+◀ Semaine précédente   |   Semaine 19 · 04 → 10 mai 2026   |   Semaine suivante ▶   |   Aujourd'hui                                                                                                                                                                                                                    
+(boutons désactivés si avant contractStart ou semaine future)
 
-### 5.1 Vues utilisateur
-- [ ] `src/Controller/DashboardController.php`
-- [ ] `templates/dashboard/index.html.twig`
-- Contenu :
-    - Résumé semaine en cours (heures travaillées, pauses, solde)
-    - Calendrier mensuel avec statut des jours
-    - Dernières entrées
+Day card ts-day : variants visuels
+- is-worked (actuel)
+- is-remote (badge "TT")
+- is-pto (badge "Congé")
+- is-off (jour off, gris, non-cliquable)
+- is-suggested (predefined remote pas encore validé, opacité 70%, pointillé)
 
-### 5.2 Statistiques
-- [ ] `src/Repository/TimeEntryRepository.php` avec méthodes :
-    - `findByUserAndPeriod(User $user, \DateTimeInterface $start, \DateTimeInterface $end)`
-    - `getWeeklyStats(User $user, int $week, int $year)`
-    - `getMonthlyStats(User $user, int $month, int $year)`
-- [ ] Affichage : tableau récapitulatif semaine/mois, graphique simple (Chart.js)
+Hero
+- Ajouter une 4e métrique : Heures sup. avec couleur accent si positif, neutre si 0
 
-### 5.3 Export
-- [ ] `src/Service/ExportService.php`
-    - Export CSV (fiche mensuelle)
-    - Export PDF via `dompdf/dompdf` ou `knplabs/knp-snappy`
-- [ ] Route `GET /entries/export?month=...&format=csv|pdf`
+Form
+- En haut : segmented control [ Bureau | Télétravail | Congé | Off ]
+- Champs start/end/break affichés uniquement si type === WORKED (toggle JS Stimulus simple, ou rechargement Turbo Frame)
 
----
+Monthly view templates/pages/month.html.twig
+- Grille calendrier 7×6 (semaines complètes du mois)
+- Chaque case : numéro du jour + type/heures, lien vers app_home?date=...
+- Stats en haut : heures du mois, overtime cumulé, jours saisis/jours ouvrés attendus
+
+Lien vers le mois dans la topbar ou via toggle dans le hero
+                                                                                                                                                                                                                                                                                                                         
+---                                                                                                                                                                                                                                                                                                                    
+## Phase 6 — Profil
+
+Page profil : ajouter une section "Préférences de saisie"
+- workingDaysPerWeek
+- defaultRemoteDays (checkboxes par jour de la semaine)
+- Helper texte : "Les jours de télétravail prédéfinis seront pré-suggérés dans le formulaire d'accueil mais resteront modifiables."
+
+  ---
+### RAF
 
 ## Phase 6 — Espace Manager/Admin
 

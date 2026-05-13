@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\DayType;
 use App\Enum\Status;
 use App\Repository\TimeEntryRepository;
 use Doctrine\DBAL\Types\Types;
@@ -25,10 +26,10 @@ class TimeEntry
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $date = null;
 
-    #[ORM\Column(type: Types::TIME_MUTABLE)]
+    #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
     private ?\DateTime $startTime = null;
 
-    #[ORM\Column(type: Types::TIME_MUTABLE)]
+    #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
     private ?\DateTime $endTime = null;
 
     #[ORM\Column(nullable: true, options: ['comment' => 'Pause en minutes'])]
@@ -46,6 +47,9 @@ class TimeEntry
 
     #[ORM\Column(enumType: Status::class)]
     private ?Status $status = null;
+
+    #[ORM\Column(nullable: true, enumType: DayType::class)]
+    private ?DayType $dayType = null;
 
     public function getId(): ?int
     {
@@ -169,11 +173,29 @@ class TimeEntry
         if ($this->startTime === null || $this->endTime === null) {
             return 0.0;
         }
+        switch ($this->dayType) {
+            case DayType::WORKED:
+                $diffSeconds = $this->endTime->getTimestamp() - $this->startTime->getTimestamp();
+                $hours = $diffSeconds / 3600;
+                $breakHours = ($this->breakDuration ?? 0) / 60;
 
-        $diffSeconds = $this->endTime->getTimestamp() - $this->startTime->getTimestamp();
-        $hours = $diffSeconds / 3600;
-        $breakHours = ($this->breakDuration ?? 0) / 60;
+                return max(0, round($hours - $breakHours, 2));
+            case DayType::REMOTE or DayType::PTO:
+                return $this->user->getExpectedDailyHours() ?? 0.0;
+            default:
+                return 0.0;
+        }
+    }
 
-        return max(0, round($hours - $breakHours, 2));
+    public function getDayType(): ?DayType
+    {
+        return $this->dayType;
+    }
+
+    public function setDayType(?DayType $dayType): static
+    {
+        $this->dayType = $dayType;
+
+        return $this;
     }
 }
