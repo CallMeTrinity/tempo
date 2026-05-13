@@ -1,9 +1,15 @@
 {# Topbar partagée pour les pages authentifiées.
-   `active` est la clé de l'item courant : 'home' | 'profile' #}
+   `active` est la clé de l'item courant : 'home' | 'month' | 'profile' #}
 {% set active = active|default('') %}
 {% set currentRoute = app.request.attributes.get('_route') %}
 {% if active == '' %}
-    {% set active = currentRoute == 'app_profile' ? 'profile' : 'home' %}
+    {% if currentRoute == 'app_profile' %}
+        {% set active = 'profile' %}
+    {% elseif currentRoute in ['app_month', 'app_month_current'] %}
+        {% set active = 'month' %}
+    {% else %}
+        {% set active = 'home' %}
+    {% endif %}
 {% endif %}
 
 <header class="ts-topbar">
@@ -15,7 +21,8 @@
     </a>
 
     <nav class="ts-nav">
-        <a href="{{ path('app_home') }}" class="ts-nav-link {{ active == 'home' ? 'is-active' : '' }}">Heures</a>
+        <a href="{{ path('app_home') }}" class="ts-nav-link {{ active == 'home' ? 'is-active' : '' }}">Semaine</a>
+        <a href="{{ path('app_month_current') }}" class="ts-nav-link {{ active == 'month' ? 'is-active' : '' }}">Mois</a>
         <a href="{{ path('app_profile') }}" class="ts-nav-link {{ active == 'profile' ? 'is-active' : '' }}">Profil</a>
     </nav>
 

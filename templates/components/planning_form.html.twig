@@ -1,0 +1,33 @@
+{# Carte de planification de jours non-travaillés (ou TT à l'avance).
+   Paramètre : planningForm (Form bound to DayPlanningType, action déjà set) #}
+
+<div class="ts-card ts-planning">
+    <div>
+        <div class="ts-card-eyebrow">Planification</div>
+        <h2 class="ts-card-title">Planifier des jours</h2>
+        <p class="ts-card-sub">
+            Marquez à l'avance vos jours de télétravail, congé ou absence.
+            Les week-ends, jours pré-contrat et jours déjà saisis sont ignorés.
+        </p>
+    </div>
+
+    {{ form_start(planningForm, {attr: {class: 'flex flex-col gap-4'}}) }}
+        {% if not planningForm.vars.valid %}
+            <div class="flash flash-error">{{ form_errors(planningForm) }}</div>
+        {% endif %}
+
+        {{ form_row(planningForm.dayType) }}
+        <div class="field-row">
+            {{ form_row(planningForm.startDate) }}
+            {{ form_row(planningForm.endDate) }}
+        </div>
+        {{ form_row(planningForm.note) }}
+
+        <div>
+            <button type="submit" class="btn-submit">
+                <span>Planifier</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+        </div>
+    {{ form_end(planningForm) }}
+</div>

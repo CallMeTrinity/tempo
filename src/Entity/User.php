@@ -71,10 +71,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $jobTitle = null;
 
     #[ORM\Column(options: ['default' => 5])]
-    private ?int $workingDaysPerWeek = null;
+    private int $workingDaysPerWeek = 5;
 
-    #[ORM\Column(nullable: true)]
-    private ?array $defaultRemoteDays = null;
+    #[ORM\Column(type: Types::JSON)]
+    private array $defaultRemoteDays = [];
+
+    #[ORM\Column(options: ['default' => 60])]
+    private int $defaultBreakMinutes = 60;
 
     public function __construct()
     {
@@ -311,11 +314,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Daily expected hours, assuming 5 working days per week.
+     * Heures journalières attendues = weeklyHours / workingDaysPerWeek.
      */
     public function getExpectedDailyHours(): ?float
     {
-        return $this->weeklyHours !== null ? round($this->weeklyHours / $this->workingDaysPerWeek, 2) : null;
+        if ($this->weeklyHours === null || $this->workingDaysPerWeek <= 0) {
+            return null;
+        }
+
+        return round($this->weeklyHours / $this->workingDaysPerWeek, 2);
     }
 
     public function isProfileComplete(): bool
@@ -328,7 +335,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             && $this->jobTitle !== null;
     }
 
-    public function getWorkingDaysPerWeek(): ?int
+    public function getWorkingDaysPerWeek(): int
     {
         return $this->workingDaysPerWeek;
     }
@@ -340,22 +347,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getDefaultRemoteDays(): ?array
+    /**
+     * @return int[] Liste de iso-weekdays (1=lundi … 7=dimanche).
+     */
+    public function getDefaultRemoteDays(): array
     {
         return $this->defaultRemoteDays;
     }
 
+    /**
+     * @param int[]|null $defaultRemoteDays
+     */
     public function setDefaultRemoteDays(?array $defaultRemoteDays): static
     {
-        $this->defaultRemoteDays = $defaultRemoteDays;
+        $clean = [];
+        foreach ($defaultRemoteDays ?? [] as $d) {
+            $i = (int) $d;
+            if ($i >= 1 && $i <= 7) {
+                $clean[$i] = $i;
+            }
+        }
+        sort($clean);
+        $this->defaultRemoteDays = $clean;
 
         return $this;
     }
 
     public function isContractActive(\DateTimeInterface $date): bool
     {
-        return $this->contractType !== null
-            && $this->contractStartDate !== null
+        return $this->contractStartDate !== null
             && $this->contractStartDate <= $date;
+    }
+
+    public function getDefaultBreakMinutes(): int
+    {
+        return $this->defaultBreakMinutes;
+    }
+
+    public function setDefaultBreakMinutes(int $defaultBreakMinutes): static
+    {
+        $this->defaultBreakMinutes = max(0, $defaultBreakMinutes);
+
+        return $this;
     }
 }

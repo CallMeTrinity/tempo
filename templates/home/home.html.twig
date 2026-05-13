@@ -34,7 +34,13 @@
                     {% endif %}
                     <div>
                         <span class="ts-metric-k">Jours saisis</span>
-                        <span class="ts-metric-v num">{{ weekByDate|length }} / 7</span>
+                        <span class="ts-metric-v num">{{ daysWorked }} / 7</span>
+                    </div>
+                    <div>
+                        <span class="ts-metric-k">Heures sup.</span>
+                        <span class="ts-metric-v num {{ overtimeHours > 0 ? 'is-positive' : '' }}">
+                            {{ overtimeHours|number_format(1, ',', ' ') }}h
+                        </span>
                     </div>
                     <div>
                         <span class="ts-metric-k">Cumul global</span>
@@ -44,33 +50,83 @@
             </div>
         </section>
 
+        {# ---------- Week navigation ---------- #}
+        {% include 'components/week_nav.html.twig' with {weekStart: weekStart, contractStart: app.user.contractStartDate} only %}
+
         {# ---------- Weekly grid ---------- #}
         <section class="ts-week">
-            {% for i in 0..6 %}
-                {% set dayDate = weekStart|date_modify("+" ~ i ~ " days") %}
+            {% for cell in weekCells %}
+                {% set dayDate = cell.date %}
                 {% set dayKey = dayDate|date("Y-m-d") %}
-                {% set entry = weekByDate[dayKey] ?? null %}
-                {% set isFuture = dayKey > today %}
+                {% set entry = cell.entry %}
+                {% set virtual = cell.virtualEntry %}
                 {% set isSelected = dayKey == selectedKey %}
-                {% set isToday = dayKey == today %}
+                {% set displayEntry = entry ?? virtual %}
+                {% set typeVal = displayEntry ? displayEntry.dayType.value : null %}
 
-                <a href="{{ path('app_home', {date: dayKey}) }}"
-                   class="ts-day
-                          {{ entry is null ? 'is-empty' : '' }}
-                          {{ isToday ? 'is-today' : '' }}
-                          {{ isSelected ? 'is-selected' : '' }}
-                          {{ isFuture ? 'is-future' : '' }}">
-                    <div class="ts-day-head">
-                        <span class="ts-day-dow">{{ dowFr[dayDate|date("D")] }}</span>
-                        <span class="ts-day-num">{{ dayDate|date("d") }}</span>
-                    </div>
-                    <div class="ts-day-hours">
-                        {% if entry %}{{ entry.hoursWorked|number_format(1, ',', ' ') }}h{% else %}—{% endif %}
-                    </div>
-                    {% if entry %}
-                        <div class="ts-day-status">{{ entry.status.value|replace({'_': ' '}) }}</div>
-                    {% endif %}
-                </a>
+                {% set variant = '' %}
+                {% if cell.isBeforeContract %}
+                    {% set variant = 'is-locked' %}
+                {% elseif entry is null and virtual is not null %}
+                    {% set variant = 'is-suggested is-remote' %}
+                {% elseif typeVal == 'worked' %}
+                    {% set variant = 'is-worked' %}
+                {% elseif typeVal == 'remote' %}
+                    {% set variant = 'is-remote' %}
+                {% elseif typeVal == 'pto' %}
+                    {% set variant = 'is-pto' %}
+                {% elseif typeVal == 'uto' %}
+                    {% set variant = 'is-uto' %}
+                {% elseif typeVal == 'off' %}
+                    {% set variant = 'is-off' %}
+                {% endif %}
+
+                {% set badge = '' %}
+                {% if typeVal == 'remote' %}{% set badge = 'TT' %}
+                {% elseif typeVal == 'pto' %}{% set badge = 'Congé' %}
+                {% elseif typeVal == 'uto' %}{% set badge = 'Sans solde' %}
+                {% elseif typeVal == 'off' %}{% set badge = 'Off' %}
+                {% endif %}
+
+                {% set classes = ['ts-day', variant] %}
+                {% if displayEntry is null %}{% set classes = classes|merge(['is-empty']) %}{% endif %}
+                {% if cell.isToday %}{% set classes = classes|merge(['is-today']) %}{% endif %}
+                {% if isSelected %}{% set classes = classes|merge(['is-selected']) %}{% endif %}
+                {% if cell.isFuture %}{% set classes = classes|merge(['is-future']) %}{% endif %}
+
+                {% set classAttr = classes|filter(c => c != '')|join(' ') %}
+
+                {% if cell.isBeforeContract %}
+                    <span class="{{ classAttr }}" aria-disabled="true">
+                        <div class="ts-day-head">
+                            <span class="ts-day-dow">{{ dowFr[dayDate|date("D")] }}</span>
+                            <span class="ts-day-num">{{ dayDate|date("d") }}</span>
+                        </div>
+                        <div class="ts-day-hours">—</div>
+                        <div class="ts-day-status">Avant contrat</div>
+                    </span>
+                {% else %}
+                    <a href="{{ path('app_home', {date: dayKey}) }}" class="{{ classAttr }}">
+                        <div class="ts-day-head">
+                            <span class="ts-day-dow">{{ dowFr[dayDate|date("D")] }}</span>
+                            <span class="ts-day-num">{{ dayDate|date("d") }}</span>
+                        </div>
+
+                        {% if displayEntry %}
+                            <div class="ts-day-hours">{{ displayEntry.hoursWorked|number_format(1, ',', ' ') }}h</div>
+                        {% else %}
+                            <div class="ts-day-hours">—</div>
+                        {% endif %}
+
+                        {% if badge %}
+                            <span class="ts-day-badge">{{ badge }}</span>
+                        {% elseif entry %}
+                            <div class="ts-day-status">{{ entry.status.value|replace({'_': ' '}) }}</div>
+                        {% elseif virtual %}
+                            <div class="ts-day-status">Suggéré</div>
+                        {% endif %}
+                    </a>
+                {% endif %}
             {% endfor %}
         </section>
 
@@ -82,7 +138,10 @@
                     <div class="ts-card-eyebrow">{{ isEdit ? 'Modifier l’entrée' : 'Nouvelle entrée' }}</div>
                     <h2 class="ts-card-title">{{ dowFrFull[selectedDate|date("D")]|capitalize }} {{ selectedDate|date("d") }} {{ monthFr[selectedDate|date("M")] }} {{ selectedDate|date("Y") }}</h2>
                     <p class="ts-card-sub">
-                        {% if isEdit %}
+                        {% if isPlannedNonWork %}
+                            Cette journée est planifiée comme <strong>{{ currentEntry.dayType.label }}</strong>.
+                            Supprimez-la pour la rouvrir à la saisie.
+                        {% elseif isEdit %}
                             Vous pouvez ajuster les horaires ou supprimer cette entrée.
                         {% else %}
                             Saisissez vos horaires pour cette journée.
@@ -90,38 +149,62 @@
                     </p>
                 </div>
 
-                {{ form_start(timeEntryForm, {attr: {class: 'flex flex-col gap-4'}}) }}
-                    {% if not timeEntryForm.vars.valid %}
-                        <div class="flash flash-error">
-                            {{ form_errors(timeEntryForm) }}
+                {% if isPlannedNonWork %}
+                    <div class="flex flex-col gap-3">
+                        <div class="ts-planned-card ts-planned-{{ currentEntry.dayType.value }}">
+                            <span class="ts-day-badge">{{ currentEntry.dayType.label }}</span>
+                            {% if currentEntry.note %}
+                                <p class="text-[13px] text-small-font mt-2 m-0">{{ currentEntry.note }}</p>
+                            {% endif %}
                         </div>
-                    {% endif %}
+                        <form action="{{ path('app_time_entry_delete', {id: currentEntry.id}) }}" method="post"
+                              onsubmit="return confirm('Supprimer cette planification ?');">
+                            <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('delete_entry_' ~ currentEntry.id) }}">
+                            <button type="submit" class="link-q">Supprimer cette planification</button>
+                        </form>
+                    </div>
+                {% else %}
+                    {{ form_start(timeEntryForm, {attr: {class: 'flex flex-col gap-4', 'data-controller': 'remote-toggle'}}) }}
+                        {% if not timeEntryForm.vars.valid %}
+                            <div class="flash flash-error">
+                                {{ form_errors(timeEntryForm) }}
+                            </div>
+                        {% endif %}
 
-                    <div class="field-row">
                         {{ form_row(timeEntryForm.date) }}
-                        {{ form_row(timeEntryForm.breakDuration) }}
-                    </div>
-                    <div class="field-row">
-                        {{ form_row(timeEntryForm.startTime) }}
-                        {{ form_row(timeEntryForm.endTime) }}
-                    </div>
-                    {{ form_row(timeEntryForm.note) }}
 
-                    <div class="flex items-center justify-between gap-3 mt-2">
-                        <button type="submit" class="btn-submit">
-                            <span>{{ isEdit ? 'Mettre à jour' : 'Enregistrer la journée' }}</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                        </button>
-                    </div>
-                {{ form_end(timeEntryForm, {render_rest: false}) }}
+                        <label class="ts-toggle">
+                            {{ form_widget(timeEntryForm.isRemote, {attr: {'data-remote-toggle-target': 'checkbox', 'data-action': 'change->remote-toggle#apply'}}) }}
+                            <span class="ts-toggle-track" aria-hidden="true"><span class="ts-toggle-dot"></span></span>
+                            <span class="ts-toggle-label">{{ timeEntryForm.isRemote.vars.label }}</span>
+                        </label>
 
-                {% if isEdit and timeEntryForm.vars.value.id %}
-                    <form action="{{ path('app_time_entry_delete', {id: timeEntryForm.vars.value.id}) }}" method="post"
-                          onsubmit="return confirm('Supprimer cette entrée ?');"
-                          class="mt-2">
-                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('delete_entry_' ~ timeEntryForm.vars.value.id) }}">
-                        <button type="submit" class="link-q">Supprimer cette entrée</button>
-                    </form>
+                        <div data-remote-toggle-target="times" class="ts-form-times flex flex-col gap-4">
+                            <div class="field-row">
+                                {{ form_row(timeEntryForm.startTime) }}
+                                {{ form_row(timeEntryForm.endTime) }}
+                            </div>
+                            {{ form_row(timeEntryForm.breakDuration) }}
+                        </div>
+
+                        {{ form_row(timeEntryForm.note) }}
+
+                        <div class="flex items-center justify-between gap-3 mt-2">
+                            <button type="submit" class="btn-submit">
+                                <span>{{ isEdit ? 'Mettre à jour' : 'Enregistrer la journée' }}</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                            </button>
+                        </div>
+                    {{ form_end(timeEntryForm, {render_rest: false}) }}
+
+                    {% if isEdit and timeEntryForm.vars.value.id %}
+                        <form action="{{ path('app_time_entry_delete', {id: timeEntryForm.vars.value.id}) }}" method="post"
+                              onsubmit="return confirm('Supprimer cette entrée ?');"
+                              class="mt-2">
+                            <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('delete_entry_' ~ timeEntryForm.vars.value.id) }}">
+                            <button type="submit" class="link-q">Supprimer cette entrée</button>
+                        </form>
+                    {% endif %}
                 {% endif %}
             </div>
 
@@ -143,9 +226,13 @@
                                     <span class="block opacity-60 text-[11px]">{{ entry.date|date('Y') }}</span>
                                 </a>
                                 <div class="ts-row-meta">
-                                    <span>{{ entry.startTime|date('H:i') }} → {{ entry.endTime|date('H:i') }}
-                                        {% if entry.breakDuration %}· pause {{ entry.breakDuration }}min{% endif %}
-                                    </span>
+                                    {% if entry.dayType.value == 'worked' and entry.startTime and entry.endTime %}
+                                        <span>{{ entry.startTime|date('H:i') }} → {{ entry.endTime|date('H:i') }}
+                                            {% if entry.breakDuration %}· pause {{ entry.breakDuration }}min{% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span>{{ entry.dayType.label }}</span>
+                                    {% endif %}
                                     {% if entry.note %}<span class="ts-row-note">{{ entry.note }}</span>{% endif %}
                                 </div>
                                 <div class="ts-row-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</div>
@@ -170,5 +257,8 @@
                 {% endif %}
             </div>
         </section>
+
+        {# ---------- Planning panel ---------- #}
+        {% include 'components/planning_form.html.twig' with {planningForm: planningForm} only %}
     </main>
 {% endblock %}

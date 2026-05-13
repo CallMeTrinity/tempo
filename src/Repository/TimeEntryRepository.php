@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\TimeEntry;
 use App\Entity\User;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -55,5 +56,17 @@ class TimeEntryRepository extends ServiceEntityRepository
             ->orderBy('t.date', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @return TimeEntry[]
+     * @throws \DateMalformedStringException
+     */
+    public function findByUserForMonth(User $user, int $year, int $month): array
+    {
+        $from = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month));
+        $to = $from->modify('last day of this month');
+
+        return $this->findByUserBetween($user, $from, $to);
     }
 }

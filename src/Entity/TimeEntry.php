@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: TimeEntryRepository::class)]
 #[ORM\UniqueConstraint(name: 'unique_user_date', columns: ['user_id', 'date'])]
@@ -48,8 +49,8 @@ class TimeEntry
     #[ORM\Column(enumType: Status::class)]
     private ?Status $status = null;
 
-    #[ORM\Column(nullable: true, enumType: DayType::class)]
-    private ?DayType $dayType = null;
+    #[ORM\Column(enumType: DayType::class)]
+    private DayType $dayType = DayType::WORKED;
 
     public function getId(): ?int
     {
@@ -85,7 +86,7 @@ class TimeEntry
         return $this->startTime;
     }
 
-    public function setStartTime(\DateTime $startTime): static
+    public function setStartTime(?\DateTime $startTime): static
     {
         $this->startTime = $startTime;
 
@@ -97,7 +98,7 @@ class TimeEntry
         return $this->endTime;
     }
 
-    public function setEndTime(\DateTime $endTime): static
+    public function setEndTime(?\DateTime $endTime): static
     {
         $this->endTime = $endTime;
 
@@ -164,38 +165,66 @@ class TimeEntry
         return $this;
     }
 
-    /**
-     * Durée travaillée en heures décimales (ex: 7.5 = 7h30).
-     * breakDuration est exprimé en minutes.
-     */
-    public function getHoursWorked(): float
-    {
-        if ($this->startTime === null || $this->endTime === null) {
-            return 0.0;
-        }
-        switch ($this->dayType) {
-            case DayType::WORKED:
-                $diffSeconds = $this->endTime->getTimestamp() - $this->startTime->getTimestamp();
-                $hours = $diffSeconds / 3600;
-                $breakHours = ($this->breakDuration ?? 0) / 60;
-
-                return max(0, round($hours - $breakHours, 2));
-            case DayType::REMOTE or DayType::PTO:
-                return $this->user->getExpectedDailyHours() ?? 0.0;
-            default:
-                return 0.0;
-        }
-    }
-
-    public function getDayType(): ?DayType
+    public function getDayType(): DayType
     {
         return $this->dayType;
     }
 
-    public function setDayType(?DayType $dayType): static
+    public function setDayType(DayType $dayType): static
     {
         $this->dayType = $dayType;
 
         return $this;
+    }
+
+    /**
+     * Durée comptabilisée en heures décimales (ex: 7.5 = 7h30).
+     * - WORKED  : (end - start) - break/60
+     * - REMOTE/PTO/UTO : heures journalières attendues du contrat (forfait)
+     * - OFF    : 0
+     */
+    public function getHoursWorked(): float
+    {
+        if ($this->dayType === DayType::WORKED) {
+            if ($this->startTime === null || $this->endTime === null) {
+                return 0.0;
+            }
+            $diffSeconds = $this->endTime->getTimestamp() - $this->startTime->getTimestamp();
+            $hours = $diffSeconds / 3600;
+            $breakHours = ($this->breakDuration ?? 0) / 60;
+
+            return max(0.0, round($hours - $breakHours, 2));
+        }
+
+        if ($this->dayType === DayType::OFF) {
+            return 0.0;
+        }
+
+        // REMOTE / PTO / UTO : forfait journalier basé sur le contrat
+        return $this->user?->getExpectedDailyHours() ?? 0.0;
+    }
+
+    #[Assert\Callback]
+    public function validateConsistency(ExecutionContextInterface $context): void
+    {
+        if ($this->dayType !== DayType::WORKED) {
+            return;
+        }
+
+        if ($this->startTime === null) {
+            $context->buildViolation('Heure de début requise pour un jour travaillé.')
+                ->atPath('startTime')
+                ->addViolation();
+        }
+        if ($this->endTime === null) {
+            $context->buildViolation('Heure de fin requise pour un jour travaillé.')
+                ->atPath('endTime')
+                ->addViolation();
+        }
+        if ($this->startTime !== null && $this->endTime !== null && $this->endTime <= $this->startTime) {
+            $context->buildViolation('L’heure de fin doit être postérieure à l’heure de début.')
+                ->atPath('endTime')
+                ->addViolation();
+        }
     }
 }

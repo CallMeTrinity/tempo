@@ -68,38 +68,60 @@
             </div>
         </section>
 
-        {# ---------- Form + Account info ---------- #}
-        <section class="pf-cols">
-            <div class="ts-card">
-                <div>
-                    <div class="ts-card-eyebrow">Mes informations</div>
-                    <h2 class="ts-card-title">Identité & contrat</h2>
-                    <p class="ts-card-sub">Ces données alimentent le suivi de progression sur l'accueil.</p>
+        {# ---------- Form (Identité + Préférences) + Account info ---------- #}
+        {{ form_start(userProfileForm, {attr: {class: 'flex flex-col gap-6'}}) }}
+            {% if not userProfileForm.vars.valid %}
+                <div class="flash flash-error">{{ form_errors(userProfileForm) }}</div>
+            {% endif %}
+
+            <section class="pf-cols">
+                <div class="ts-card">
+                    <div>
+                        <div class="ts-card-eyebrow">Mes informations</div>
+                        <h2 class="ts-card-title">Identité & contrat</h2>
+                        <p class="ts-card-sub">Ces données alimentent le suivi de progression sur l'accueil.</p>
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        <div class="field-row">
+                            {{ form_row(userProfileForm.firstName) }}
+                            {{ form_row(userProfileForm.lastName) }}
+                        </div>
+                        {{ form_row(userProfileForm.jobTitle) }}
+                        <div class="field-row">
+                            {{ form_row(userProfileForm.contractType) }}
+                            {{ form_row(userProfileForm.weeklyHours) }}
+                        </div>
+                        {{ form_row(userProfileForm.contractStartDate) }}
+                    </div>
                 </div>
 
-                {{ form_start(userProfileForm, {attr: {class: 'flex flex-col gap-4'}}) }}
-                    {% if not userProfileForm.vars.valid %}
-                        <div class="flash flash-error">{{ form_errors(userProfileForm) }}</div>
-                    {% endif %}
-
-                    <div class="field-row">
-                        {{ form_row(userProfileForm.firstName) }}
-                        {{ form_row(userProfileForm.lastName) }}
+                <div class="ts-card">
+                    <div>
+                        <div class="ts-card-eyebrow">Saisie quotidienne</div>
+                        <h2 class="ts-card-title">Préférences de saisie</h2>
+                        <p class="ts-card-sub">Affinez la pré-suggestion des journées sur l'accueil.</p>
                     </div>
-                    {{ form_row(userProfileForm.jobTitle) }}
-                    <div class="field-row">
-                        {{ form_row(userProfileForm.contractType) }}
-                        {{ form_row(userProfileForm.weeklyHours) }}
-                    </div>
-                    {{ form_row(userProfileForm.contractStartDate) }}
 
-                    <button type="submit" class="btn-submit mt-2">
-                        <span>Enregistrer</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                    </button>
-                {{ form_end(userProfileForm) }}
+                    <div class="flex flex-col gap-4">
+                        <div class="field-row">
+                            {{ form_row(userProfileForm.workingDaysPerWeek) }}
+                            {{ form_row(userProfileForm.defaultBreakMinutes) }}
+                        </div>
+                        {{ form_row(userProfileForm.defaultRemoteDays) }}
+                    </div>
+                </div>
+            </section>
+
+            <div class="flex">
+                <button type="submit" class="btn-submit">
+                    <span>Enregistrer</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
             </div>
+        {{ form_end(userProfileForm) }}
 
+        <section>
             <div class="ts-card">
                 <div>
                     <div class="ts-card-eyebrow">Compte</div>

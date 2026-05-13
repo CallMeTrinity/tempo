@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mois · Tempo{% endblock %}
+
+{% block body %}
+    {% set today = "now"|date("Y-m-d") %}
+    {% set monthFr = {'Jan': 'janvier', 'Feb': 'février', 'Mar': 'mars', 'Apr': 'avril', 'May': 'mai', 'Jun': 'juin', 'Jul': 'juillet', 'Aug': 'août', 'Sep': 'septembre', 'Oct': 'octobre', 'Nov': 'novembre', 'Dec': 'décembre'} %}
+    {% set dowFr = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] %}
+
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'month'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        {# ---------- Header ---------- #}
+        <section class="ts-month-head">
+            <h1 class="ts-month-title">
+                {{ monthFr[firstOfMonth|date("M")]|capitalize }} {{ year }}
+            </h1>
+
+            <nav class="ts-weeknav" aria-label="Navigation entre mois">
+                {% if canGoPrev %}
+                    <a class="ts-weeknav-btn" href="{{ path('app_month', {year: prev.year, month: prev.month}) }}" rel="prev">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                        <span>Mois précédent</span>
+                    </a>
+                {% else %}
+                    <span class="ts-weeknav-btn is-disabled" aria-disabled="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                        <span>Mois précédent</span>
+                    </span>
+                {% endif %}
+
+                {% if canGoNext %}
+                    <a class="ts-weeknav-btn" href="{{ path('app_month', {year: next.year, month: next.month}) }}" rel="next">
+                        <span>Mois suivant</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
+                {% else %}
+                    <span class="ts-weeknav-btn is-disabled" aria-disabled="true">
+                        <span>Mois suivant</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                    </span>
+                {% endif %}
+
+                <a class="ts-weeknav-btn ts-weeknav-today" href="{{ path('app_month_current') }}">Mois en cours</a>
+            </nav>
+        </section>
+
+        {# ---------- Stats ---------- #}
+        <section class="ts-month-stats">
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Heures du mois</span>
+                <span class="ts-month-stat-v">{{ stats.totalHours|number_format(1, ',', ' ') }}h</span>
+                <span class="ts-month-stat-sub">cumulé</span>
+            </div>
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Jours saisis</span>
+                <span class="ts-month-stat-v">{{ stats.daysFilled }} / {{ stats.expectedWorkingDays }}</span>
+                <span class="ts-month-stat-sub">attendus selon contrat</span>
+            </div>
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Heures sup.</span>
+                <span class="ts-month-stat-v {{ stats.overtimeHours > 0 ? 'is-positive' : '' }}">
+                    {{ stats.overtimeHours|number_format(1, ',', ' ') }}h
+                </span>
+                <span class="ts-month-stat-sub">vs heures attendues</span>
+            </div>
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Déficit</span>
+                <span class="ts-month-stat-v">{{ stats.deficitHours|number_format(1, ',', ' ') }}h</span>
+                <span class="ts-month-stat-sub">à rattraper</span>
+            </div>
+        </section>
+
+        {# ---------- Calendar grid ---------- #}
+        <section class="flex flex-col gap-1">
+            <div class="ts-month-dows">
+                {% for d in dowFr %}<div class="ts-month-dow">{{ d }}</div>{% endfor %}
+            </div>
+            <div class="ts-month-grid">
+                {% for cell in cells %}
+                    {% set d = cell.date %}
+                    {% set key = d|date("Y-m-d") %}
+                    {% set entry = cell.entry %}
+                    {% set typeVal = entry ? entry.dayType.value : null %}
+
+                    {% set variant = '' %}
+                    {% if typeVal == 'worked' %}{% set variant = 'is-worked' %}
+                    {% elseif typeVal == 'remote' %}{% set variant = 'is-remote' %}
+                    {% elseif typeVal == 'pto' %}{% set variant = 'is-pto' %}
+                    {% elseif typeVal == 'uto' %}{% set variant = 'is-uto' %}
+                    {% elseif typeVal == 'off' %}{% set variant = 'is-off' %}
+                    {% endif %}
+
+                    {% set badge = '' %}
+                    {% if typeVal == 'remote' %}{% set badge = 'TT' %}
+                    {% elseif typeVal == 'pto' %}{% set badge = 'Congé' %}
+                    {% elseif typeVal == 'uto' %}{% set badge = 'Sans solde' %}
+                    {% elseif typeVal == 'off' %}{% set badge = 'Off' %}
+                    {% endif %}
+
+                    {% set classes = ['ts-month-cell', variant] %}
+                    {% if not cell.isCurrentMonth %}{% set classes = classes|merge(['is-outside']) %}{% endif %}
+                    {% if cell.isToday %}{% set classes = classes|merge(['is-today']) %}{% endif %}
+                    {% if cell.isFuture %}{% set classes = classes|merge(['is-future']) %}{% endif %}
+                    {% if cell.isBeforeContract %}{% set classes = classes|merge(['is-locked']) %}{% endif %}
+                    {% set classAttr = classes|filter(c => c != '')|join(' ') %}
+
+                    {% if cell.isBeforeContract or cell.isFuture %}
+                        <span class="{{ classAttr }}" aria-disabled="true">
+                            <span class="ts-month-cell-num">{{ d|date("d") }}</span>
+                        </span>
+                    {% else %}
+                        <a class="{{ classAttr }}" href="{{ path('app_home', {date: key}) }}">
+                            <span class="ts-month-cell-num">{{ d|date("d") }}</span>
+                            {% if entry %}
+                                <span class="ts-month-cell-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</span>
+                                {% if badge %}<span class="ts-month-cell-badge">{{ badge }}</span>{% endif %}
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        {# ---------- Planning panel ---------- #}
+        {% include 'components/planning_form.html.twig' with {planningForm: planningForm} only %}
+    </main>
+{% endblock %}

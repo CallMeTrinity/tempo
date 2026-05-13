@@ -1,0 +1,59 @@
+{# Navigation entre semaines.
+   Paramètres :
+     - weekStart    : \DateTimeImmutable (lundi 00:00) de la semaine affichée
+     - contractStart: \DateTimeInterface|null
+#}
+{% set monthFrShort = {'Jan':'janv.','Feb':'févr.','Mar':'mars','Apr':'avr.','May':'mai','Jun':'juin','Jul':'juil.','Aug':'août','Sep':'sept.','Oct':'oct.','Nov':'nov.','Dec':'déc.'} %}
+
+{% set weekEnd = weekStart|date_modify('+6 days') %}
+{% set prevMonday = weekStart|date_modify('-7 days') %}
+{% set nextMonday = weekStart|date_modify('+7 days') %}
+
+{% set todayMonday = 'monday this week'|date('Y-m-d') %}
+{% set canPrev = contractStart is null or prevMonday|date('Y-m-d') >= contractStart|date('Y-m-d') %}
+{% set canNext = nextMonday|date('Y-m-d') <= todayMonday %}
+
+{% set isoYear = weekStart|date('o') %}
+{% set isoWeek = weekStart|date('W') %}
+{% set prevIsoYear = prevMonday|date('o') %}
+{% set prevIsoWeek = prevMonday|date('W') %}
+{% set nextIsoYear = nextMonday|date('o') %}
+{% set nextIsoWeek = nextMonday|date('W') %}
+
+{% set startLabel = weekStart|date('d') ~ ' ' ~ monthFrShort[weekStart|date('M')] %}
+{% set endLabel = weekEnd|date('d') ~ ' ' ~ monthFrShort[weekEnd|date('M')] ~ ' ' ~ weekEnd|date('Y') %}
+
+<nav class="ts-weeknav" aria-label="Navigation entre semaines">
+    {% if canPrev %}
+        <a class="ts-weeknav-btn" href="{{ path('app_home', {week: prevIsoYear ~ '-W' ~ prevIsoWeek}) }}" rel="prev">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            <span>Semaine précédente</span>
+        </a>
+    {% else %}
+        <span class="ts-weeknav-btn is-disabled" aria-disabled="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            <span>Semaine précédente</span>
+        </span>
+    {% endif %}
+
+    <div class="ts-weeknav-label">
+        <span class="ts-weeknav-week">Semaine {{ isoWeek }}</span>
+        <span class="ts-weeknav-range">{{ startLabel }} → {{ endLabel }}</span>
+    </div>
+
+    <div class="ts-weeknav-right">
+        {% if canNext %}
+            <a class="ts-weeknav-btn" href="{{ path('app_home', {week: nextIsoYear ~ '-W' ~ nextIsoWeek}) }}" rel="next">
+                <span>Semaine suivante</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </a>
+        {% else %}
+            <span class="ts-weeknav-btn is-disabled" aria-disabled="true">
+                <span>Semaine suivante</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </span>
+        {% endif %}
+
+        <a class="ts-weeknav-btn ts-weeknav-today" href="{{ path('app_home') }}">Aujourd'hui</a>
+    </div>
+</nav>

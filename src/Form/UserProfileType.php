@@ -5,8 +5,10 @@ namespace App\Form;
 use App\Entity\User;
 use App\Enum\ContractType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -51,6 +53,33 @@ class UserProfileType extends AbstractType
                 'label' => 'Début du contrat',
                 'required' => false,
                 'widget' => 'single_text',
+            ])
+            ->add('workingDaysPerWeek', IntegerType::class, [
+                'label' => 'Jours travaillés par semaine',
+                'required' => false,
+                'attr' => ['min' => 1, 'max' => 5],
+                'help' => 'Nombre de jours ouvrés contractuels (1 à 5, week-ends toujours chômés).',
+            ])
+            ->add('defaultBreakMinutes', IntegerType::class, [
+                'label' => 'Pause par défaut (minutes)',
+                'required' => false,
+                'attr' => ['min' => 0, 'max' => 600, 'step' => 5, 'placeholder' => '60'],
+                'help' => 'Valeur pré-remplie dans le formulaire de saisie quotidien.',
+            ])
+            ->add('defaultRemoteDays', ChoiceType::class, [
+                'label' => 'Jours de télétravail prédéfinis',
+                'required' => false,
+                'choices' => [
+                    'Lundi' => 1,
+                    'Mardi' => 2,
+                    'Mercredi' => 3,
+                    'Jeudi' => 4,
+                    'Vendredi' => 5,
+                ],
+                'multiple' => true,
+                'choice_attr' => ['class' => 'ts-choices-input'],
+                'attr' => ['class' => 'ts-choices'],
+                'help' => 'Ces jours seront pré-cochés en télétravail à l\'ouverture de la saisie quotidienne.',
             ])
         ;
     }
