@@ -34,7 +34,7 @@
                     {% endif %}
                     <div>
                         <span class="ts-metric-k">Jours saisis</span>
-                        <span class="ts-metric-v num">{{ daysWorked }} / 7</span>
+                        <span class="ts-metric-v num">{{ daysWorked }} / {{ app.user.workingDaysPerWeek }}</span>
                     </div>
                     <div>
                         <span class="ts-metric-k">Heures sup.</span>

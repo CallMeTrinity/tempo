@@ -63,13 +63,6 @@ class MonthController extends AbstractController
             }
         }
 
-        // Garde « mois futur » (pas de mois au-delà du mois en cours).
-        if ($first > $today->modify('first day of this month')) {
-            $this->addFlash('error', 'Vous ne pouvez pas consulter un mois futur.');
-
-            return $this->redirectToRoute('app_month_current');
-        }
-
         $stats = $timesheet->computeMonthlyStats($user, $year, $month);
 
         // Grille 7x6 : du lundi qui précède (ou est) le 1er, jusqu'à 41 jours plus tard.
@@ -102,11 +95,12 @@ class MonthController extends AbstractController
             ];
         }
 
-        // Navigation mois précédent / suivant
+        // Navigation mois précédent / suivant.
+        // Navigation libre vers le futur pour consulter les jours planifiés.
         $prev = $first->modify('-1 month');
         $next = $first->modify('+1 month');
         $canGoPrev = $contractStartImm === null || $prev->modify('last day of this month') >= $contractStartImm;
-        $canGoNext = $next <= $today->modify('first day of this month');
+        $canGoNext = true;
 
         $planningForm = $this->createForm(DayPlanningType::class, [
             'startDate' => \DateTime::createFromImmutable($first),

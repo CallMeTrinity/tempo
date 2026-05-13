@@ -81,7 +81,7 @@ class TimesheetService
             $isBeforeContract = $contractStartImm !== null && $date < $contractStartImm;
 
             $virtual = null;
-            if ($entry === null && $isPredefinedRemote && !$isBeforeContract && !$isFuture) {
+            if ($entry === null && $isPredefinedRemote && !$isBeforeContract) {
                 $virtual = (new TimeEntry())
                     ->setUser($user)
                     ->setDate(\DateTime::createFromImmutable($date))

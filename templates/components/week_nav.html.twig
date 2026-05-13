@@ -5,13 +5,12 @@
 #}
 {% set monthFrShort = {'Jan':'janv.','Feb':'févr.','Mar':'mars','Apr':'avr.','May':'mai','Jun':'juin','Jul':'juil.','Aug':'août','Sep':'sept.','Oct':'oct.','Nov':'nov.','Dec':'déc.'} %}
 
-{% set weekEnd = weekStart|date_modify('+6 days') %}
+{% set weekEnd = weekStart|date_modify('+4 days') %}
 {% set prevMonday = weekStart|date_modify('-7 days') %}
 {% set nextMonday = weekStart|date_modify('+7 days') %}
 
-{% set todayMonday = 'monday this week'|date('Y-m-d') %}
 {% set canPrev = contractStart is null or prevMonday|date('Y-m-d') >= contractStart|date('Y-m-d') %}
-{% set canNext = nextMonday|date('Y-m-d') <= todayMonday %}
+{% set canNext = true %}{# Navigation libre vers le futur pour consulter les jours planifiés. #}
 
 {% set isoYear = weekStart|date('o') %}
 {% set isoWeek = weekStart|date('W') %}

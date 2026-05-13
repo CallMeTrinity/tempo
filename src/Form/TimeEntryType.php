@@ -23,7 +23,6 @@ class TimeEntryType extends AbstractType
             ->add('date', DateType::class, [
                 'label' => 'Date',
                 'widget' => 'single_text',
-                'attr' => ['max' => (new \DateTime())->format('Y-m-d')],
             ])
             ->add('isRemote', CheckboxType::class, [
                 'label' => 'Télétravail (forfait journalier)',

@@ -106,7 +106,7 @@
                     {% if cell.isBeforeContract %}{% set classes = classes|merge(['is-locked']) %}{% endif %}
                     {% set classAttr = classes|filter(c => c != '')|join(' ') %}
 
-                    {% if cell.isBeforeContract or cell.isFuture %}
+                    {% if cell.isBeforeContract %}
                         <span class="{{ classAttr }}" aria-disabled="true">
                             <span class="ts-month-cell-num">{{ d|date("d") }}</span>
                         </span>

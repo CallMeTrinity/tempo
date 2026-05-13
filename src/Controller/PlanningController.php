@@ -58,7 +58,8 @@ class PlanningController extends AbstractController
         }
 
         $created = 0;
-        $skippedExisting = 0;
+        $overwritten = 0;
+        $skippedWorked = 0;
         $skippedWeekend = 0;
         $skippedBeforeContract = 0;
 
@@ -74,7 +75,21 @@ class PlanningController extends AbstractController
             } elseif ($contractStart !== null && $cursor < $contractStart) {
                 ++$skippedBeforeContract;
             } elseif (isset($existingByKey[$key])) {
-                ++$skippedExisting;
+                $existing = $existingByKey[$key];
+                // On n'écrase JAMAIS une saisie réelle (WORKED avec horaires).
+                // Les autres types planifiés (REMOTE/PTO/UTO/OFF) sont remplacés.
+                if ($existing->getDayType() === DayType::WORKED) {
+                    ++$skippedWorked;
+                } else {
+                    $existing
+                        ->setDayType($type)
+                        ->setStartTime(null)
+                        ->setEndTime(null)
+                        ->setBreakDuration(null)
+                        ->setNote($note)
+                        ->setUpdatedAt(new \DateTimeImmutable());
+                    ++$overwritten;
+                }
             } else {
                 $entry = (new TimeEntry())
                     ->setUser($user)
@@ -93,11 +108,16 @@ class PlanningController extends AbstractController
 
         $em->flush();
 
+        $touched = $created + $overwritten;
         $parts = [];
-        $parts[] = sprintf('%d jour%s planifié%s en %s', $created, $created > 1 ? 's' : '', $created > 1 ? 's' : '', $type->getLabel());
+        $parts[] = sprintf('%d jour%s planifié%s en %s', $touched, $touched > 1 ? 's' : '', $touched > 1 ? 's' : '', $type->getLabel());
+
         $details = [];
-        if ($skippedExisting > 0) {
-            $details[] = $skippedExisting . ' déjà saisi' . ($skippedExisting > 1 ? 's' : '');
+        if ($overwritten > 0) {
+            $details[] = $overwritten . ' remplacé' . ($overwritten > 1 ? 's' : '');
+        }
+        if ($skippedWorked > 0) {
+            $details[] = $skippedWorked . ' jour' . ($skippedWorked > 1 ? 's' : '') . ' travaillé' . ($skippedWorked > 1 ? 's' : '') . ' conservé' . ($skippedWorked > 1 ? 's' : '');
         }
         if ($skippedWeekend > 0) {
             $details[] = $skippedWeekend . ' week-end' . ($skippedWeekend > 1 ? 's' : '');
@@ -106,10 +126,10 @@ class PlanningController extends AbstractController
             $details[] = $skippedBeforeContract . ' avant contrat';
         }
         if ($details !== []) {
-            $parts[] = '(ignorés : ' . implode(', ', $details) . ')';
+            $parts[] = '(' . implode(', ', $details) . ')';
         }
 
-        $this->addFlash($created > 0 ? 'success' : 'info', implode(' ', $parts) . '.');
+        $this->addFlash($touched > 0 ? 'success' : 'info', implode(' ', $parts) . '.');
 
         return $redirect;
     }

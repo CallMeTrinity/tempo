@@ -69,10 +69,10 @@
         @apply font-instrument text-[32px] leading-none;
     }
 
-    /* ---- Weekly grid (7 days at-a-glance) ---- */
+    /* ---- Weekly grid (Mon-Fri at-a-glance, week-ends omitted) ---- */
     .ts-week {
         @apply grid gap-2;
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(5, 1fr);
     }
     .ts-day {
         @apply flex flex-col gap-2 p-3.5 rounded-md border border-rule bg-card;
@@ -87,7 +87,7 @@
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-dark-font) 6%, transparent);
     }
     .ts-day.is-future {
-        @apply opacity-50 pointer-events-none;
+        @apply opacity-60;
     }
     .ts-day.is-selected {
         @apply bg-dark-font text-light-font border-dark-font;
@@ -446,7 +446,9 @@
         @apply border-dark-font;
         box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-dark-font) 6%, transparent);
     }
-    .ts-month-cell.is-future,
+    .ts-month-cell.is-future {
+        @apply opacity-60;
+    }
     .ts-month-cell.is-locked {
         @apply opacity-40 pointer-events-none;
     }
@@ -479,7 +481,7 @@
 
     @media (max-width: 880px) {
         .ts-cols { grid-template-columns: 1fr; }
-        .ts-week { grid-template-columns: repeat(4, 1fr); }
+        .ts-week { grid-template-columns: repeat(5, 1fr); }
         .ts-row { grid-template-columns: 70px 1fr 80px; }
         .ts-row-badge, .ts-row-actions { display: none; }
         .ts-month-stats { grid-template-columns: repeat(2, 1fr); }

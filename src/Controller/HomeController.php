@@ -93,8 +93,13 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('app_home', ['date' => $timeEntry->getDate()->format('Y-m-d')]);
         }
 
-        $weekEnd = $weekStart->modify('+6 days');
-        $weekCells = $timesheet->buildWeekView($user, $weekStart);
+        // Week-ends toujours chômés : on s'arrête au vendredi pour l'affichage
+        // et on filtre les entrées potentielles de week-end pour les stats.
+        $weekEnd = $weekStart->modify('+4 days');
+        $weekCells = array_values(array_filter(
+            $timesheet->buildWeekView($user, $weekStart),
+            static fn (array $c) => $c['isoWeekday'] <= 5,
+        ));
 
         $weekEntries = [];
         foreach ($weekCells as $cell) {
