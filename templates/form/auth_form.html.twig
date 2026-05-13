@@ -58,12 +58,28 @@
 {%- endblock checkbox_row -%}
 
 {%- block checkbox_widget -%}
-    <input type="checkbox" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+    <input type="checkbox"
+        {{ block('widget_attributes') }}
+        {% if value is defined %} value="{{ value }}"{% endif %}
+        {% if checked %} checked="checked"{% endif %}
+    />
 {%- endblock checkbox_widget -%}
+
+
+{%- block choice_widget_expanded -%}
+    <div class="ts-choices">
+        {%- for child in form %}
+            {{- form_widget(child) -}}
+            {{- form_label(child) -}}
+        {%- endfor -%}
+    </div>
+{%- endblock choice_widget_expanded -%}
 
 {%- block checkbox_label -%}
     {%- if label is not same as(false) -%}
-        {{- label|trans(label_translation_parameters|default({}), translation_domain) -}}
+        <label for="{{ id }}"{% with { attr: label_attr } %}{{ block('attributes') }}{% endwith %}>
+            {{- label|trans(label_translation_parameters|default({}), translation_domain) -}}
+        </label>
     {%- endif -%}
 {%- endblock checkbox_label -%}
 

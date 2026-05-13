@@ -368,6 +368,83 @@
         max-width: 560px;
     }
 
+    /* ---- Admin sub-navigation ---- */
+    .ts-subnav {
+        @apply flex items-center gap-1 pb-2 border-b border-rule-soft;
+    }
+    .ts-subnav-link {
+        @apply px-3 py-1.5 rounded-full text-[13px] text-small-font no-underline;
+        @apply inline-flex items-center gap-2;
+        transition: background-color 150ms, color 150ms;
+    }
+    .ts-subnav-link:hover { @apply text-dark-font bg-paper-2; }
+    .ts-subnav-link.is-active {
+        @apply text-dark-font;
+        background: color-mix(in srgb, var(--color-dark-font) 8%, transparent);
+    }
+    .ts-subnav-pill {
+        @apply inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-medium;
+        @apply bg-accent text-light-font;
+    }
+
+    /* ---- Admin: data table ---- */
+    .ts-table {
+        @apply flex flex-col;
+    }
+    .ts-table-head {
+        @apply grid gap-4 px-2 py-2 text-[10px] tracking-[0.16em] uppercase text-small-font;
+        grid-template-columns: minmax(180px, 1.5fr) minmax(140px, 1fr) 130px 130px 90px 100px;
+        border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .ts-table-row {
+        @apply grid gap-4 items-center px-2 py-3 text-[13px] border-b border-rule-soft;
+        grid-template-columns: minmax(180px, 1.5fr) minmax(140px, 1fr) 130px 130px 90px 100px;
+    }
+    .ts-table-row:last-child { @apply border-b-0; }
+    .ts-table-user {
+        @apply flex items-center gap-3 min-w-0;
+    }
+    .ts-table-user-name {
+        @apply text-dark-font font-medium truncate;
+    }
+    .ts-table-user-meta {
+        @apply text-[11.5px] text-small-font truncate;
+    }
+    .ts-table-num {
+        @apply text-right;
+    }
+    .ts-table-num.is-positive { color: var(--color-accent); }
+    .ts-table-num.is-negative { color: var(--color-warn); }
+    .ts-table-actions {
+        @apply flex justify-end items-center gap-2;
+    }
+    .ts-table-num .is-positive { color: var(--color-accent); }
+    .ts-table-num .is-negative { color: var(--color-warn); }
+
+    /* Admin pending row: 6 cols (date, user, meta, hours, actions) */
+    .ts-row.ts-row-admin {
+        grid-template-columns: 80px minmax(180px, 1.4fr) minmax(140px, 1fr) 80px 240px;
+    }
+
+    /* ---- Admin action buttons ---- */
+    .ts-action {
+        @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] cursor-pointer;
+        @apply border border-rule bg-card text-dark-font no-underline;
+        transition: background-color 150ms, color 150ms, border-color 150ms;
+    }
+    .ts-action:hover { @apply border-dark-font bg-paper-2; }
+    .ts-action-ok {
+        @apply bg-accent text-light-font border-accent;
+    }
+    .ts-action-ok:hover {
+        @apply bg-accent text-light-font;
+        opacity: 0.92;
+    }
+    .ts-icon-btn-ok:hover {
+        color: var(--color-accent);
+        @apply bg-paper;
+    }
+
     /* ---- "Planned non-work" card (PTO/UTO/OFF for the selected day) ---- */
     .ts-planned-card {
         @apply p-4 rounded-md border border-rule bg-paper-2 flex flex-col gap-1;
@@ -387,6 +464,10 @@
     .ts-planned-card.ts-planned-remote {
         background: color-mix(in srgb, var(--color-sky) 8%, var(--color-card));
         border-color: color-mix(in srgb, var(--color-sky) 30%, var(--color-rule));
+    }
+    .ts-planned-card.ts-planned-locked {
+        @apply bg-paper-2;
+        border-color: var(--color-rule);
     }
 
     /* Hero metric color accent for overtime > 0 */

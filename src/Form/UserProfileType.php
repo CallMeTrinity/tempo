@@ -76,8 +76,8 @@ class UserProfileType extends AbstractType
                     'Jeudi' => 4,
                     'Vendredi' => 5,
                 ],
+                'expanded' => true,
                 'multiple' => true,
-                'choice_attr' => ['class' => 'ts-choices-input'],
                 'attr' => ['class' => 'ts-choices'],
                 'help' => 'Ces jours seront pré-cochés en télétravail à l\'ouverture de la saisie quotidienne.',
             ])
