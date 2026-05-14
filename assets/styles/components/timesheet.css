@@ -95,6 +95,12 @@
     .ts-day.is-selected .ts-day-hours {
         @apply text-light-font;
     }
+    .ts-day.is-selected.is-pto {
+        @apply bg-accent-soft text-accent;
+    }
+    .ts-day.is-selected.is-pto .ts-day-hours {
+        @apply text-accent;
+    }
     .ts-day.is-empty .ts-day-hours {
         @apply text-small-font opacity-60;
     }
@@ -323,7 +329,7 @@
     .ts-choices {
         @apply flex flex-wrap gap-1.5;
     }
-    .ts-choices input[type="checkbox"] {
+    .ts-choices input[type="checkbox"], .ts-choices input[type="radio"] {
         @apply sr-only;
     }
     .ts-choices label {
@@ -335,10 +341,10 @@
     .ts-choices label:hover {
         @apply text-dark-font border-dark-font;
     }
-    .ts-choices input[type="checkbox"]:checked + label {
+    .ts-choices input[type="checkbox"]:checked + label, .ts-choices input[type="radio"]:checked + label {
         @apply bg-dark-font text-light-font border-dark-font;
     }
-    .ts-choices input[type="checkbox"]:focus-visible + label {
+    .ts-choices input[type="checkbox"]:focus-visible + label, .ts-choices input[type="radio"]:focus-visible + label {
         outline: 2px solid var(--color-accent);
         outline-offset: 2px;
     }
@@ -399,7 +405,7 @@
         background: color-mix(in srgb, var(--color-dark-font) 8%, transparent);
     }
     .ts-subnav-pill {
-        @apply inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-medium;
+        @apply inline-flex items-center justify-center min-w-4.5 h-4.5 px-1 rounded-full text-[10px] font-medium;
         @apply bg-accent text-light-font;
     }
     .ts-subnav-pill.ts-subnav-pill-warn {
