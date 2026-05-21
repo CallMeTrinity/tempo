@@ -93,7 +93,7 @@
         @apply bg-dark-font text-light-font border-dark-font;
     }
     .ts-day.is-selected .ts-day-hours {
-        @apply text-light-font;
+        @apply text-dark-font;
     }
     .ts-day.is-selected.is-pto {
         @apply bg-accent-soft text-accent;
@@ -211,6 +211,10 @@
         background: color-mix(in srgb, var(--color-sky) 8%, var(--color-card));
         border-color: color-mix(in srgb, var(--color-sky) 30%, var(--color-rule));
     }
+    .ts-day.is-remote.is-selected {
+        background: color-mix(in srgb, var(--color-sky) 14%, var(--color-card));
+        @apply text-dark-font;
+    }
     .ts-day.is-remote .ts-day-badge {
         color: var(--color-sky);
         background: color-mix(in srgb, var(--color-sky) 14%, var(--color-card));
@@ -227,6 +231,10 @@
     .ts-day.is-uto {
         background: #fcf3e6;
         border-color: #e8c98a;
+    }
+    .ts-day.is-uto.is-selected {
+        background: #f5ebdd;
+        @apply text-dark-font;
     }
     .ts-day.is-uto .ts-day-badge {
         color: #b46e1c;

@@ -71,17 +71,11 @@ git clone <repo-url> tempo && cd tempo
 # 2. Installer les dépendances PHP
 composer install
 
-# 3. Démarrer la base de données
-docker compose up -d
+# 3. Lancer le serveur de dev (inclut composer et tailwind)
+symfony server:start
 
 # 4. Créer le schéma
 php bin/console doctrine:migrations:migrate
-
-# 5. Compiler Tailwind (mode watch en dev)
-php bin/console tailwind:build --watch
-
-# 6. Lancer le serveur de dev
-symfony server:start
 # ou : php -S 127.0.0.1:8000 -t public/
 ```
 
