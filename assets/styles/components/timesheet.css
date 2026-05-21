@@ -92,6 +92,9 @@
     .ts-day.is-selected {
         @apply bg-dark-font text-light-font border-dark-font;
     }
+    .ts-day.is-selected.is-worked .ts-day-hours {
+        @apply text-light-font;
+    }
     .ts-day.is-selected .ts-day-hours {
         @apply text-dark-font;
     }
