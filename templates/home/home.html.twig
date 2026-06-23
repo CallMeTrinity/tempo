@@ -72,6 +72,7 @@
         {% endif %}
 
         {# ---------- Weekly grid ---------- #}
+        <div class="ts-week-scroll">
         <section class="ts-week">
             {% for cell in weekCells %}
                 {% set dayDate = cell.date %}
@@ -147,6 +148,7 @@
                 {% endif %}
             {% endfor %}
         </section>
+        </div>
 
         {# ---------- Form + Recent ---------- #}
         <section class="ts-cols">

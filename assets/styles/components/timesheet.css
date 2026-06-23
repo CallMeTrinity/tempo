@@ -270,10 +270,12 @@
     .ts-weeknav-next  { grid-area: next; }
     .ts-weeknav-today { grid-area: today; }
     .ts-weeknav-btn {
-        @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] no-underline;
+        @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] no-underline whitespace-nowrap;
         @apply border border-rule bg-card text-dark-font;
         @apply transition-colors duration-150 cursor-pointer;
     }
+    /* Libellés responsives : version courte masquée par défaut */
+    .ts-weeknav-text-abbr { display: none; }
     .ts-weeknav-btn:hover {
         @apply bg-paper-2 border-dark-font;
     }
@@ -693,8 +695,25 @@
         .ts-weeknav-next  { justify-self: end; }
         .ts-weeknav-today { justify-self: center; }
 
-        /* Grille semaine : 5 colonnes conservées mais compactées */
-        .ts-week { @apply gap-1.5; }
+        /* Libellés courts pour éviter le retour à la ligne sur petits écrans */
+        .ts-weeknav-text-full { display: none; }
+        .ts-weeknav-text-abbr { display: inline; }
+
+        /* Grille semaine : défilement horizontal pour garder des cases lisibles.
+           Le débordement latéral 0.5rem compense le padding de .ts-shell afin que
+           le scroll aille bord à bord. */
+        .ts-week-scroll {
+            @apply overflow-x-auto -mx-4 px-4 py-1;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .ts-week-scroll::-webkit-scrollbar { display: none; }
+        .ts-week {
+            @apply gap-1.5;
+            grid-template-columns: repeat(5, minmax(92px, 1fr));
+            min-width: 100%;
+            width: max-content;
+        }
         .ts-day { @apply p-2; min-height: 84px; }
         .ts-day-num { @apply text-xl; }
         .ts-day-hours { @apply text-base; }
