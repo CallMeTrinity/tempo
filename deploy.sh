@@ -1,11 +1,12 @@
 #!/bin/bash
-
 set -e
 
-cd /home/clients/a3718940730c81023c4a2f7dadfef260/sites/tempo.antoninpamart.fr
+source ~/.bashrc
 
 git pull
-php bin/console tailwind:build
+composer install --no-dev --optimize-autoloader
+php bin/console doctrine:migrations:migrate --no-interaction --env=prod
+php bin/console tailwind:build --minify
 php bin/console asset-map:compile
 php bin/console cache:clear --env=prod
 
