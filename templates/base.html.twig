@@ -2,8 +2,19 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="{{ asset('favicon.ico') }}">
+
+        {# ---- PWA ---- #}
+        <meta name="theme-color" content="#14130f">
+        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="Tempo">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
         {% block stylesheets %}
             <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
         {% endblock %}
@@ -21,5 +32,13 @@
     </head>
     <body>
         {% block body %}{% endblock %}
+
+        {% if app.environment == 'prod' %}
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+            }
+        </script>
+        {% endif %}
     </body>
 </html>
