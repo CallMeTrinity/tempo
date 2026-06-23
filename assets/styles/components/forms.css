@@ -107,4 +107,11 @@
     .pw-label {
         @apply text-[11.5px] text-small-font;
     }
+
+    /* Mobile : 16px évite le zoom auto d'iOS au focus des champs */
+    @media (max-width: 600px) {
+        .inp {
+            font-size: 16px;
+        }
+    }
 }

@@ -261,8 +261,14 @@
 
     /* ---- Week navigation ---- */
     .ts-weeknav {
-        @apply flex items-center justify-between gap-3 flex-wrap;
+        @apply grid items-center gap-3;
+        grid-template-columns: auto 1fr auto auto;
+        grid-template-areas: "prev label next today";
     }
+    .ts-weeknav-prev  { grid-area: prev; }
+    .ts-weeknav-label { grid-area: label; justify-self: center; }
+    .ts-weeknav-next  { grid-area: next; }
+    .ts-weeknav-today { grid-area: today; }
     .ts-weeknav-btn {
         @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] no-underline;
         @apply border border-rule bg-card text-dark-font;
@@ -290,9 +296,6 @@
     }
     .ts-weeknav-range {
         @apply text-[11.5px] tracking-wide uppercase text-small-font mt-1;
-    }
-    .ts-weeknav-right {
-        @apply flex items-center gap-2;
     }
 
     /* ---- Segmented control (radios as pills) ---- */
@@ -640,11 +643,94 @@
         @apply text-small-font bg-paper border border-rule;
     }
 
+    /* Wrapper défilant horizontalement pour les tables admin larges sur mobile */
+    .ts-scroll-x {
+        @apply overflow-x-auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     @media (max-width: 880px) {
         .ts-cols { grid-template-columns: 1fr; }
         .ts-week { grid-template-columns: repeat(5, 1fr); }
         .ts-row { grid-template-columns: 70px 1fr 80px; }
         .ts-row-badge, .ts-row-actions { display: none; }
         .ts-month-stats { grid-template-columns: repeat(2, 1fr); }
+
+        /* Les actions admin (approuver/refuser/retirer) doivent rester
+           visibles : la règle générale ci-dessus ne masque que la liste
+           récente côté employé. */
+        .ts-row-account .ts-row-actions,
+        .ts-row-blacklist .ts-row-actions,
+        .ts-weekgroup-row .ts-row-actions { display: flex; }
+    }
+
+    /* ---- Téléphone ---- */
+    @media (max-width: 600px) {
+        /* Coquille : moins de padding latéral */
+        .ts-shell { @apply px-4 py-5 gap-7; }
+
+        /* Topbar : la nav passe sur sa propre ligne, userbox compact */
+        .ts-topbar { @apply flex-wrap gap-3; }
+        .ts-nav { @apply order-3 w-full justify-center; }
+        .ts-userbox { @apply text-[12px] gap-2; }
+
+        /* Hero : on ne garde que le total (21h / 35), le reste est masqué */
+        .ts-hero-row { @apply gap-3; }
+        .ts-hero-title { font-size: clamp(40px, 12vw, 56px); }
+        .ts-hero-metrics { display: none; }
+
+        /* Navigation semaine : libellé en haut, préc./suiv. sur une ligne,
+           aujourd'hui centré en bas */
+        .ts-weeknav {
+            grid-template-columns: 1fr 1fr;
+            grid-template-areas:
+                "label label"
+                "prev  next"
+                "today today";
+            @apply gap-2;
+        }
+        .ts-weeknav-prev  { justify-self: start; }
+        .ts-weeknav-next  { justify-self: end; }
+        .ts-weeknav-today { justify-self: center; }
+
+        /* Grille semaine : 5 colonnes conservées mais compactées */
+        .ts-week { @apply gap-1.5; }
+        .ts-day { @apply p-2; min-height: 84px; }
+        .ts-day-num { @apply text-xl; }
+        .ts-day-hours { @apply text-base; }
+
+        /* Cartes : padding réduit */
+        .ts-card { @apply p-5; }
+
+        /* Submit pleine largeur (cible tactile) */
+        .btn-submit { @apply w-full justify-center; }
+
+        /* Sous-nav admin défilante */
+        .ts-subnav { @apply flex-nowrap overflow-x-auto; }
+
+        /* Calendrier mois : 7 colonnes conservées, cellules rétrécies */
+        .ts-month-title { font-size: clamp(28px, 8vw, 36px); }
+        .ts-month-grid { @apply gap-0.5; grid-auto-rows: minmax(54px, auto); }
+        .ts-month-cell { @apply p-1; min-height: 54px; }
+        .ts-month-cell-num { @apply text-sm; }
+        .ts-month-cell-hours { @apply text-[11px]; }
+
+        /* Tables admin : largeur mini + scroll horizontal via .ts-scroll-x parent */
+        .ts-scroll-x > .ts-table { min-width: 720px; }
+
+        /* Inscriptions : lignes empilées (user / date / actions) */
+        .ts-row-account,
+        .ts-row-blacklist {
+            grid-template-columns: 1fr;
+            @apply items-start gap-2;
+        }
+        .ts-row-account .ts-row-actions,
+        .ts-row-blacklist .ts-row-actions { @apply justify-start flex-wrap; }
+
+        /* Entrées à valider : ligne compacte 4 colonnes */
+        .ts-weekgroup-row {
+            grid-template-columns: 48px minmax(0, 1fr) auto auto;
+            @apply gap-2;
+        }
     }
 }
