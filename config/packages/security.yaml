@@ -28,6 +28,13 @@ security:
                 # where to redirect after logout
                 # target: app_any_route
 
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 2592000 # 30 jours (en secondes)
+                # La case "_remember_me" du formulaire de connexion doit être cochée.
+                # Passer always_remember_me à true pour maintenir la session sans case.
+                always_remember_me: false
+
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
 

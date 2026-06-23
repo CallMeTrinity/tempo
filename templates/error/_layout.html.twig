@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ block('err_code') }} · Tempo{% endblock %}
+
+{% block body %}
+    <main class="err-page">
+        <section class="err-panel">
+            <div class="err-mark">
+                <span class="err-dot"></span>
+                Tempo
+            </div>
+
+            <div class="err-body">
+                <div class="err-code num">{% block err_code %}Erreur{% endblock %}</div>
+                <div class="err-eyebrow">{% block err_eyebrow %}Une erreur est survenue{% endblock %}</div>
+                <h1 class="err-title">{% block err_title %}Quelque chose s'est mal passé.{% endblock %}</h1>
+                <p class="err-message">{% block err_message %}{% endblock %}</p>
+
+                <div class="err-actions">
+                    <a href="{{ path('app_home') }}" class="btn-submit">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+                        <span>Retour à l'accueil</span>
+                    </a>
+                    {% block err_actions_extra %}{% endblock %}
+                </div>
+            </div>
+
+            <footer class="err-foot">
+                <span>© 2026 Tempo</span>
+                <span class="dot">·</span>
+                <a href="{{ path('app_login') }}">Connexion</a>
+            </footer>
+        </section>
+    </main>
+{% endblock %}

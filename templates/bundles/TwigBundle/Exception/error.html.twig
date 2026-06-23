@@ -1,0 +1,6 @@
+{% extends 'error/_layout.html.twig' %}
+
+{% block err_code %}{{ status_code }}{% endblock %}
+{% block err_eyebrow %}{{ status_text }}{% endblock %}
+{% block err_title %}Une erreur est survenue.{% endblock %}
+{% block err_message %}La requête n'a pas pu aboutir ({{ status_code }} · {{ status_text }}). Revenez à l'accueil ou réessayez plus tard.{% endblock %}

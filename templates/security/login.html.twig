@@ -58,6 +58,14 @@
                                autocomplete="current-password" required>
                     </div>
 
+                    <label class="check">
+                        <input type="checkbox" name="_remember_me" checked>
+                        <span class="check-box">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4 10-10"/></svg>
+                        </span>
+                        <span>Rester connecté pendant 30 jours</span>
+                    </label>
+
                     <input type="hidden" name="_csrf_token" data-controller="csrf-protection"
                            value="{{ csrf_token('authenticate') }}">
 
