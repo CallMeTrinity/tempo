@@ -1,0 +1,158 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tempo — Fiches horaires et suivi du temps de travail{% endblock %}
+
+{% block meta_description %}Tempo est l'application de gestion de fiches horaires pour suivre vos heures de bureau, télétravail et congés, calculer vos heures supplémentaires et soumettre votre semaine en un clic.{% endblock %}
+
+{% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Tempo",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "{{ url('app_landing') }}",
+        "description": "{{ block('meta_description') }}",
+        "inLanguage": "fr-FR",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+        },
+        "featureList": [
+            "Saisie hebdomadaire des heures",
+            "Calcul automatique des heures supplémentaires",
+            "Suivi du télétravail, des congés et des absences",
+            "Validation des semaines par l'équipe d'encadrement"
+        ]
+    }
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div class="landing-page">
+        <nav class="landing-nav">
+            <a href="{{ path('app_landing') }}" class="landing-logo" aria-label="Tempo, accueil">
+                <span class="landing-logo-mark">
+                    <img src="{{ asset('images/logo.png') }}" alt="" width="20" height="20">
+                </span>
+                <span class="landing-logo-text">Tempo</span>
+            </a>
+            <div class="landing-nav-actions">
+                <a href="{{ path('app_login') }}" class="link-q">Connexion</a>
+                <a href="{{ path('app_register') }}" class="btn-submit">
+                    <span>Créer un compte</span>
+                </a>
+            </div>
+        </nav>
+
+        <header class="landing-hero">
+            <div class="landing-hero-inner">
+                <p class="landing-eyebrow">Gestion des fiches horaires</p>
+                <h1 class="landing-h1">Suivez votre temps de travail, sans la paperasse.</h1>
+                <p class="landing-lede">
+                    Tempo permet à chaque collaborateur de saisir, semaine après semaine, ses heures de bureau,
+                    de télétravail, ses congés et ses absences. L'application calcule automatiquement les heures
+                    travaillées et les heures supplémentaires, et simplifie la validation par l'équipe d'encadrement.
+                </p>
+                <div class="landing-cta-row">
+                    <a href="{{ path('app_register') }}" class="btn-submit">
+                        <span>Commencer gratuitement</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                    <a href="{{ path('app_login') }}" class="link-q">J'ai déjà un compte</a>
+                </div>
+            </div>
+        </header>
+
+        {# ---------- Product preview: a faux week, in the real app's visual language ---------- #}
+        <section class="landing-preview-wrap" aria-label="Aperçu de l'application">
+            <div class="landing-window">
+                <div class="landing-window-bar" aria-hidden="true">
+                    <span class="landing-window-dot"></span>
+                    <span class="landing-window-dot"></span>
+                    <span class="landing-window-dot"></span>
+                    <span class="landing-window-url">tempo · mes heures</span>
+                </div>
+                <div class="landing-window-body">
+                    <div class="landing-preview-hero">
+                        <p class="ts-hero-eyebrow">Semaine 26 · 23 juin → 27 juin 2025</p>
+                        <div class="landing-preview-total">
+                            <span class="num">32,5</span><em>h</em>
+                            <span class="landing-preview-target num"> / 35h</span>
+                        </div>
+                    </div>
+                    <div class="ts-week landing-preview-week">
+                        <span class="ts-day is-worked">
+                            <span class="ts-day-head"><span class="ts-day-dow">Lun</span><span class="ts-day-num">23</span></span>
+                            <span class="ts-day-hours">7,5h</span>
+                            <span class="ts-day-status">Validé</span>
+                        </span>
+                        <span class="ts-day is-worked">
+                            <span class="ts-day-head"><span class="ts-day-dow">Mar</span><span class="ts-day-num">24</span></span>
+                            <span class="ts-day-hours">7,5h</span>
+                            <span class="ts-day-status">Validé</span>
+                        </span>
+                        <span class="ts-day is-remote">
+                            <span class="ts-day-head"><span class="ts-day-dow">Mer</span><span class="ts-day-num">25</span></span>
+                            <span class="ts-day-hours">7,0h</span>
+                            <span class="ts-day-badge">TT</span>
+                        </span>
+                        <span class="ts-day is-worked is-today">
+                            <span class="ts-day-head"><span class="ts-day-dow">Jeu</span><span class="ts-day-num">26</span></span>
+                            <span class="ts-day-hours">7,5h</span>
+                            <span class="ts-day-status">Soumis</span>
+                        </span>
+                        <span class="ts-day is-pto">
+                            <span class="ts-day-head"><span class="ts-day-dow">Ven</span><span class="ts-day-num">27</span></span>
+                            <span class="ts-day-hours">3,0h</span>
+                            <span class="ts-day-badge">Congé</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="landing-section" aria-labelledby="landing-features-title">
+            <div class="landing-section-head">
+                <p class="landing-eyebrow landing-eyebrow-dark">Ce que fait Tempo</p>
+                <h2 id="landing-features-title" class="landing-h2">Tout le suivi du temps, au même endroit.</h2>
+            </div>
+            <div class="landing-features">
+                <article class="landing-feature">
+                    <p class="landing-feature-num">01</p>
+                    <h3 class="landing-feature-title">Saisie hebdomadaire</h3>
+                    <p class="landing-feature-desc">Une vue jour par jour pour pointer le bureau, le télétravail, les congés payés ou non, et les absences.</p>
+                </article>
+                <article class="landing-feature">
+                    <p class="landing-feature-num">02</p>
+                    <h3 class="landing-feature-title">Calcul automatique</h3>
+                    <p class="landing-feature-desc">Les heures travaillées et les heures supplémentaires sont calculées pour vous, selon votre contrat.</p>
+                </article>
+                <article class="landing-feature">
+                    <p class="landing-feature-num">03</p>
+                    <h3 class="landing-feature-title">Validation en un clic</h3>
+                    <p class="landing-feature-desc">Soumettez votre semaine pour validation, et laissez votre équipe d'encadrement approuver en lot.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="landing-cta-band" aria-labelledby="landing-cta-title">
+            <h2 id="landing-cta-title" class="landing-h2">Prêt à arrêter les tableurs ?</h2>
+            <p class="landing-cta-band-sub">Créez votre compte en moins d'une minute et saisissez votre première semaine dès aujourd'hui.</p>
+            <div class="landing-cta-row">
+                <a href="{{ path('app_register') }}" class="btn-submit">
+                    <span>Créer un compte gratuit</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </a>
+                <a href="{{ path('app_login') }}" class="link-q link-q-on-dark">J'ai déjà un compte</a>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            <span>© {{ "now"|date("Y") }} Tempo</span>
+            <span>Fiches horaires &amp; suivi du temps de travail</span>
+        </footer>
+    </div>
+{% endblock %}

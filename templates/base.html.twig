@@ -1,10 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <title>{% block title %}Tempo — Fiches horaires et suivi du temps de travail{% endblock %}</title>
+        <meta name="description" content="{% block meta_description %}Tempo — l'application de gestion de fiches horaires pour suivre, déclarer et valider votre temps de travail au quotidien.{% endblock %}">
         <link rel="icon" href="{{ asset('favicon.ico') }}">
+
+        {# ---- SEO ---- #}
+        <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+        <link rel="canonical" href="{% block canonical %}{{ app.request.uri|split('?')|first }}{% endblock %}">
+
+        {# ---- Open Graph ---- #}
+        {% block opengraph %}
+            <meta property="og:type" content="website">
+            <meta property="og:site_name" content="Tempo">
+            <meta property="og:locale" content="fr_FR">
+            <meta property="og:title" content="{{ block('title') }}">
+            <meta property="og:description" content="{{ block('meta_description') }}">
+            <meta property="og:url" content="{{ block('canonical') }}">
+            <meta property="og:image" content="{{ absolute_url(asset('pwa-icons/icon-512.png')) }}">
+        {% endblock %}
+
+        {# ---- Twitter Card ---- #}
+        {% block twitter %}
+            <meta name="twitter:card" content="summary">
+            <meta name="twitter:title" content="{{ block('title') }}">
+            <meta name="twitter:description" content="{{ block('meta_description') }}">
+            <meta name="twitter:image" content="{{ absolute_url(asset('pwa-icons/icon-512.png')) }}">
+        {% endblock %}
+
+        {% block structured_data %}{% endblock %}
 
         {# ---- PWA ---- #}
         <meta name="theme-color" content="#14130f">
