@@ -25,7 +25,7 @@ class HomeController extends AbstractController
     /**
      * @throws DateMalformedStringException
      */
-    #[Route('/', name: 'app_home', methods: ['GET', 'POST'])]
+    #[Route('/home', name: 'app_home', methods: ['GET', 'POST'])]
     public function home(
         Request $request,
         EntityManagerInterface $em,

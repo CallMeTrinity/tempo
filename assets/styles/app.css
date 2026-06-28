@@ -7,6 +7,7 @@
 @import "./components/timesheet.css";
 @import "./components/profile.css";
 @import "./components/error.css";
+@import "./components/landing.css";
 
 @theme {
     --color-panel-dark: #14130f;

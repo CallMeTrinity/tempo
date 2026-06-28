@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tempo — Fiches horaires et suivi du temps de travail{% endblock %}
+
+{% block meta_description %}Tempo est l'application de gestion de fiches horaires pour suivre vos heures de bureau, télétravail et congés, calculer vos heures supplémentaires et soumettre votre semaine en un clic.{% endblock %}
+
+{% block body %}
+    <div class="landing-page">
+        <nav class="landing-nav">
+            <a href="/" class="landing-logo">
+                <span class="landing-logo-mark">
+                    <img src="{{ asset('images/logo.png') }}" alt="" class="w-5 h-5">
+                </span>
+                <span class="landing-logo-text">Tempo</span>
+            </a>
+            <div class="landing-nav-actions">
+                <a href="{{ path('app_login') }}" class="link-q">Connexion</a>
+                <a href="{{ path('app_register') }}" class="btn-submit">
+                    <span>Créer un compte</span>
+                </a>
+            </div>
+        </nav>
+
+        <header class="landing-hero">
+            <div class="landing-hero-inner">
+                <div class="landing-eyebrow">Gestion des fiches horaires</div>
+                <h1 class="landing-h1">Suivez votre temps de travail, sans la paperasse.</h1>
+                <p class="landing-lede">
+                    Tempo permet à chaque collaborateur de saisir, semaine après semaine, ses heures de bureau,
+                    de télétravail, ses congés et ses absences. L'application calcule automatiquement les heures
+                    travaillées et les heures supplémentaires, et simplifie la validation par l'équipe d'encadrement.
+                </p>
+                <div class="landing-cta-row">
+                    <a href="{{ path('app_register') }}" class="btn-submit">
+                        <span>Commencer gratuitement</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                    <a href="{{ path('app_login') }}" class="link-q">J'ai déjà un compte</a>
+                </div>
+            </div>
+        </header>
+
+        <section class="landing-features">
+            <div class="landing-feature">
+                <div class="landing-feature-num">01</div>
+                <div class="landing-feature-title">Saisie hebdomadaire</div>
+                <p class="landing-feature-desc">Une vue jour par jour pour pointer le bureau, le télétravail, les congés payés ou non, et les absences.</p>
+            </div>
+            <div class="landing-feature">
+                <div class="landing-feature-num">02</div>
+                <div class="landing-feature-title">Calcul automatique</div>
+                <p class="landing-feature-desc">Les heures travaillées et les heures supplémentaires sont calculées pour vous, selon votre contrat.</p>
+            </div>
+            <div class="landing-feature">
+                <div class="landing-feature-num">03</div>
+                <div class="landing-feature-title">Validation en un clic</div>
+                <p class="landing-feature-desc">Soumettez votre semaine pour validation, et laissez votre équipe d'encadrement approuver en bulk.</p>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            <span>© {{ "now"|date("Y") }} Tempo</span>
+            <span>Fiches horaires &amp; suivi du temps de travail</span>
+        </footer>
+    </div>
+{% endblock %}
