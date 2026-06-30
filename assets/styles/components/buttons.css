@@ -79,6 +79,27 @@
         @apply text-dark-font bg-paper-2;
     }
 
+    /* Compact action button used in admin hero rows. Primary = filled,
+       ghost = bordered, both tuned for the light paper background. */
+    .ts-btn {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md;
+        @apply text-[13px] font-medium tracking-wide no-underline;
+        @apply cursor-pointer transition-colors duration-150;
+        border: 0;
+    }
+    .ts-btn-primary {
+        @apply bg-dark-font text-paper;
+    }
+    .ts-btn-primary:hover:not(:disabled) {
+        @apply bg-accent;
+    }
+    .ts-btn-ghost {
+        @apply bg-transparent text-dark-font border border-rule;
+    }
+    .ts-btn-ghost:hover {
+        @apply border-dark-font bg-paper-2;
+    }
+
     .link-q {
         @apply text-[11.5px] text-small-font no-underline;
         @apply border-b border-transparent transition-colors duration-150;
