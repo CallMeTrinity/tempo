@@ -47,6 +47,7 @@ class ProfileController extends AbstractController
         }
 
         $personalProjects = $projects->findPersonalProjects($user);
+        $teamProjects = $projects->findTeamProjectsForMember($user);
 
         $response = $this->render('profile/profile.html.twig', [
             'user' => $user,
@@ -54,6 +55,9 @@ class ProfileController extends AbstractController
             'stats' => $this->computeStats($user, $repo),
             'personalProjects' => $personalProjects,
             'hoursByProject' => $allocations->sumHoursByProject($personalProjects),
+            'teamProjects' => $teamProjects,
+            'teamHoursMine' => $allocations->sumHoursByProjectForUser($teamProjects, $user),
+            'teamHoursTotal' => $allocations->sumHoursByProject($teamProjects),
         ]);
 
         // Form soumis mais invalide : statut 422 pour que Turbo réaffiche le
@@ -125,10 +129,14 @@ class ProfileController extends AbstractController
         $user = $this->getUser();
 
         $personalProjects = $projects->findPersonalProjects($user);
+        $teamProjects = $projects->findTeamProjectsForMember($user);
 
         return $this->render('profile/projects.html.twig', [
             'projects' => $personalProjects,
             'hoursByProject' => $allocations->sumHoursByProject($personalProjects),
+            'teamProjects' => $teamProjects,
+            'teamHoursMine' => $allocations->sumHoursByProjectForUser($teamProjects, $user),
+            'teamHoursTotal' => $allocations->sumHoursByProject($teamProjects),
         ]);
     }
 

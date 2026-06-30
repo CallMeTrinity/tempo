@@ -202,5 +202,39 @@
                 {% endif %}
             </div>
         </section>
+
+        {% if teamProjects is not empty %}
+            <section>
+                <div class="ts-card">
+                    <div>
+                        <div class="ts-card-eyebrow">Projets</div>
+                        <h2 class="ts-card-title">Mes projets d'équipe</h2>
+                        <p class="ts-card-sub">Projets partagés dont vous êtes membre. « Moi » correspond à vos heures, « équipe » au cumul de tous les membres.</p>
+                    </div>
+
+                    <ul class="pf-project-list">
+                        {% for project in teamProjects %}
+                            {% set mine = teamHoursMine[project.id]|default(0) %}
+                            {% set total = teamHoursTotal[project.id]|default(0) %}
+                            <li class="pf-project-item">
+                                {% include 'admin/_project_color.html.twig' with {color: project.color, icon: project.icon, size: 28} only %}
+                                <span class="pf-project-name">{{ project.name }}</span>
+                                {% if not project.isActive %}
+                                    <span class="ts-row-badge ts-badge-draft">Inactif</span>
+                                {% endif %}
+                                <span class="pf-project-hours num" title="Vos heures sur ce projet">
+                                    {{ mine|number_format(mine == mine|round ? 0 : 1, ',', ' ') }}h
+                                    <span class="muted">moi</span>
+                                </span>
+                                <span class="pf-project-hours num" title="Cumul de l'équipe">
+                                    {{ total|number_format(total == total|round ? 0 : 1, ',', ' ') }}h
+                                    <span class="muted">équipe</span>
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+        {% endif %}
     </main>
 {% endblock %}

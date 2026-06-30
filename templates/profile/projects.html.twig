@@ -47,5 +47,34 @@
                 </div>
             {% endif %}
         </section>
+
+        {% if teamProjects is not empty %}
+            <section class="ts-card">
+                <div>
+                    <div class="ts-card-eyebrow">Projets d'équipe</div>
+                    <h2 class="ts-card-title">{{ teamProjects|length }} projet{{ teamProjects|length > 1 ? 's' : '' }}</h2>
+                    <p class="ts-card-sub">Projets partagés dont vous êtes membre. « Mes heures » = votre saisie ; « Équipe » = cumul de tous les membres.</p>
+                </div>
+
+                <div class="ts-scroll-x">
+                    <div class="ts-table ts-table-projects-team">
+                        <div class="ts-table-head">
+                            <div>Projet</div>
+                            <div>Mes heures</div>
+                            <div>Équipe</div>
+                            <div>Statut</div>
+                        </div>
+
+                        {% for project in teamProjects %}
+                            {% include 'profile/_team_project_row.html.twig' with {
+                                project: project,
+                                mine: teamHoursMine[project.id]|default(0),
+                                total: teamHoursTotal[project.id]|default(0),
+                            } only %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+        {% endif %}
     </main>
 {% endblock %}

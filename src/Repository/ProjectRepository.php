@@ -59,6 +59,24 @@ class ProjectRepository extends ServiceEntityRepository
     }
 
     /**
+     * Projets d'équipe dont l'utilisateur est membre (pour son profil).
+     *
+     * @return Project[]
+     */
+    public function findTeamProjectsForMember(User $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.members', 'm')
+            ->andWhere('p.scope = :team')
+            ->andWhere('m = :user')
+            ->setParameter('team', ProjectScope::TEAM)
+            ->setParameter('user', $user)
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Tous les projets d'équipe (pour l'admin).
      *
      * @return Project[]

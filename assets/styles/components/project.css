@@ -134,6 +134,12 @@
         @apply text-dark-font text-[13px];
     }
 
+    /* ---- Tableau projets d'équipe : 4 colonnes (projet, mes heures, équipe, statut) ---- */
+    .ts-table-projects-team .ts-table-head,
+    .ts-table-projects-team .ts-table-row {
+        grid-template-columns: minmax(200px, 2fr) 100px 100px 110px;
+    }
+
     /* ---- Sélecteur d'icône (radios -> tuiles) ---- */
     .ts-iconpick {
         @apply flex flex-wrap gap-2;
