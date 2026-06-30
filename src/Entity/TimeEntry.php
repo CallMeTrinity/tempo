@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Enum\DayType;
 use App\Enum\Status;
 use App\Repository\TimeEntryRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -51,6 +53,17 @@ class TimeEntry
 
     #[ORM\Column(enumType: DayType::class)]
     private DayType $dayType = DayType::WORKED;
+
+    /**
+     * @var Collection<int, TimeEntryProject>
+     */
+    #[ORM\OneToMany(targetEntity: TimeEntryProject::class, mappedBy: 'timeEntry', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $projectAllocations;
+
+    public function __construct()
+    {
+        $this->projectAllocations = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -226,5 +239,45 @@ class TimeEntry
                 ->atPath('endTime')
                 ->addViolation();
         }
+    }
+
+    /**
+     * @return Collection<int, TimeEntryProject>
+     */
+    public function getProjectAllocations(): Collection
+    {
+        return $this->projectAllocations;
+    }
+
+    public function addProjectAllocation(TimeEntryProject $projectAllocation): static
+    {
+        if (!$this->projectAllocations->contains($projectAllocation)) {
+            $this->projectAllocations->add($projectAllocation);
+            $projectAllocation->setTimeEntry($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProjectAllocation(TimeEntryProject $projectAllocation): static
+    {
+        if ($this->projectAllocations->removeElement($projectAllocation)) {
+            // set the owning side to null (unless already changed)
+            if ($projectAllocation->getTimeEntry() === $this) {
+                $projectAllocation->setTimeEntry(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getAllocatedHours(): float
+    {
+        return $this->projectAllocations->reduce(
+            function (float $total, TimeEntryProject $projectAllocation) {
+                return $total + $projectAllocation->getHours();
+            },
+            0.0
+        );
     }
 }

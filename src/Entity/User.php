@@ -79,9 +79,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => 60])]
     private int $defaultBreakMinutes = 60;
 
+    /**
+     * @var Collection<int, Project>
+     */
+    #[ORM\OneToMany(targetEntity: Project::class, mappedBy: 'owner')]
+    private Collection $projects_owned;
+
+    /**
+     * @var Collection<int, Project>
+     */
+    #[ORM\ManyToMany(targetEntity: Project::class, mappedBy: 'members')]
+    private Collection $projects_member;
+
     public function __construct()
     {
         $this->timeEntries = new ArrayCollection();
+        $this->projects_owned = new ArrayCollection();
+        $this->projects_member = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -392,6 +406,63 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDefaultBreakMinutes(int $defaultBreakMinutes): static
     {
         $this->defaultBreakMinutes = max(0, $defaultBreakMinutes);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function getProjectsOwned(): Collection
+    {
+        return $this->projects_owned;
+    }
+
+    public function addProject(Project $project): static
+    {
+        if (!$this->projects_owned->contains($project)) {
+            $this->projects_owned->add($project);
+            $project->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProject(Project $project): static
+    {
+        if ($this->projects_owned->removeElement($project)) {
+            // set the owning side to null (unless already changed)
+            if ($project->getOwner() === $this) {
+                $project->setOwner(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function getProjectsMember(): Collection
+    {
+        return $this->projects_member;
+    }
+
+    public function addProjectsMember(Project $projectsMember): static
+    {
+        if (!$this->projects_member->contains($projectsMember)) {
+            $this->projects_member->add($projectsMember);
+            $projectsMember->addMember($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProjectsMember(Project $projectsMember): static
+    {
+        if ($this->projects_member->removeElement($projectsMember)) {
+            $projectsMember->removeMember($this);
+        }
 
         return $this;
     }
