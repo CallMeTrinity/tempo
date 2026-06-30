@@ -35,6 +35,10 @@ class TimeEntryProjectType extends AbstractType
                 ],
                 'placeholder' => 'Choisir un projet…',
                 'label' => 'Projet',
+                // Select natif masqué derrière le widget custom : pas de
+                // contrainte HTML5 `required` (sinon "control not focusable" au
+                // submit). La présence du projet est validée côté serveur.
+                'required' => false,
             ])
             ->add('hours', NumberType::class, [
                 'label' => 'Heures',

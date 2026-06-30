@@ -12,6 +12,9 @@
             {% endif %}
         </div>
     </div>
+    <div class="ts-project-hours num" title="Total d'heures affectées à ce projet">
+        {{ (hours|default(0))|number_format((hours|default(0)) == (hours|default(0))|round ? 0 : 1, ',', ' ') }}h
+    </div>
     <div>
         {% if project.isActive %}
             <span class="ts-row-badge ts-badge-approved">Actif</span>

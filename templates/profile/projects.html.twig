@@ -35,12 +35,13 @@
                     <div class="ts-table ts-table-projects-personal">
                         <div class="ts-table-head">
                             <div>Projet</div>
+                            <div>Heures</div>
                             <div>Statut</div>
                             <div></div>
                         </div>
 
                         {% for project in projects %}
-                            {% include 'profile/_project_row.html.twig' with {project: project} only %}
+                            {% include 'profile/_project_row.html.twig' with {project: project, hours: hoursByProject[project.id]|default(0)} only %}
                         {% endfor %}
                     </div>
                 </div>

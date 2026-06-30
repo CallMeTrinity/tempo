@@ -5,10 +5,49 @@
 {# Une ligne d'affectation projet : sert au rendu des lignes existantes et de
    prototype (réutilisé tel quel par le contrôleur Stimulus). #}
 {% macro alloc_row(row) %}
+    {% set selectedValue = row.project.vars.value %}
+    {% set selectedProject = null %}
+    {% for choice in row.project.vars.choices %}
+        {% if choice.value == selectedValue %}{% set selectedProject = choice.data %}{% endif %}
+    {% endfor %}
     <div class="ts-alloc-row" data-project-allocations-target="row">
-        <span class="ts-project-badge ts-alloc-dot" data-project-allocations-target="dot" style="--pc: transparent;" aria-hidden="true"></span>
         <div class="ts-alloc-fields">
-            {{ form_widget(row.project, {attr: {'data-action': 'change->project-allocations#syncPreview'}}) }}
+            {# Select custom : aperçu icône + couleur dans le déclencheur et chaque
+               option. Le select natif (masqué) porte la valeur soumise. #}
+            <div class="ts-cselect" data-controller="project-select">
+                {{ form_widget(row.project, {attr: {
+                    'data-project-select-target': 'native',
+                    class: 'ts-cselect-native',
+                }}) }}
+                <button type="button" class="ts-cselect-trigger inp"
+                        data-project-select-target="trigger"
+                        data-action="project-select#toggle keydown->project-select#triggerKeydown"
+                        aria-haspopup="listbox" aria-expanded="false">
+                    <span class="ts-cselect-value" data-project-select-target="value">
+                        {% if selectedProject %}
+                            {% include 'admin/_project_color.html.twig' with {color: selectedProject.color, icon: selectedProject.icon, size: 22} only %}
+                            <span class="ts-cselect-option-name">{{ selectedProject.name }}</span>
+                        {% else %}
+                            <span class="ts-cselect-placeholder">{{ row.project.vars.placeholder }}</span>
+                        {% endif %}
+                    </span>
+                    <svg class="ts-cselect-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <ul class="ts-cselect-menu" data-project-select-target="menu" role="listbox" hidden
+                    data-action="keydown->project-select#menuKeydown">
+                    {% for choice in row.project.vars.choices %}
+                        {% set p = choice.data %}
+                        <li class="ts-cselect-option {{ choice.value == selectedValue ? 'is-selected' : '' }}"
+                            role="option" tabindex="-1"
+                            data-value="{{ choice.value }}"
+                            data-action="click->project-select#select"
+                            aria-selected="{{ choice.value == selectedValue ? 'true' : 'false' }}">
+                            {% include 'admin/_project_color.html.twig' with {color: p.color, icon: p.icon, size: 22} only %}
+                            <span class="ts-cselect-option-name">{{ p.name }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
             <div class="ts-alloc-hours">
                 {{ form_widget(row.hours) }}
                 <span class="ts-alloc-unit">h</span>

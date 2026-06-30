@@ -4,10 +4,10 @@ import { Controller } from '@hotwired/stimulus';
  * Gère la liste dynamique d'affectations « projet + heures » d'une journée.
  *
  * - `add` clone le prototype Symfony (placeholder __name__ remplacé par un index
- *   monotone) et l'ajoute à la liste.
+ *   monotone) et l'ajoute à la liste ; le select custom imbriqué se connecte
+ *   tout seul (Stimulus observe le DOM).
  * - `remove` retire la ligne du DOM (orphanRemoval côté Doctrine fait le reste
  *   à la persistance).
- * - `syncPreview` reflète la couleur du projet sélectionné sur la pastille.
  *
  * Usage :
  *   <div data-controller="project-allocations"
@@ -22,9 +22,6 @@ export default class extends Controller {
     static values = { prototype: String, index: Number };
 
     connect() {
-        this.listTarget
-            .querySelectorAll('[data-project-allocations-target="row"]')
-            .forEach((row) => this.syncRowPreview(row));
         this.refreshEmpty();
     }
 
@@ -37,12 +34,11 @@ export default class extends Controller {
         template.innerHTML = markup.trim();
         const row = template.content.firstElementChild;
         this.listTarget.appendChild(row);
-        this.syncRowPreview(row);
         this.refreshEmpty();
 
-        const select = row.querySelector('select');
-        if (select) {
-            select.focus();
+        const trigger = row.querySelector('.ts-cselect-trigger');
+        if (trigger) {
+            trigger.focus();
         }
     }
 
@@ -53,24 +49,6 @@ export default class extends Controller {
             row.remove();
             this.refreshEmpty();
         }
-    }
-
-    syncPreview(event) {
-        const row = event.target.closest('[data-project-allocations-target="row"]');
-        if (row) {
-            this.syncRowPreview(row);
-        }
-    }
-
-    syncRowPreview(row) {
-        const select = row.querySelector('select');
-        const dot = row.querySelector('[data-project-allocations-target="dot"]');
-        if (!select || !dot) {
-            return;
-        }
-        const option = select.options[select.selectedIndex];
-        const hex = option ? option.getAttribute('data-hex') : null;
-        dot.style.setProperty('--pc', hex || 'transparent');
     }
 
     refreshEmpty() {

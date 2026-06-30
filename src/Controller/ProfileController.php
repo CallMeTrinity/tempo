@@ -10,6 +10,7 @@ use App\Form\UserProfileType;
 use App\Project\ProjectColors;
 use App\Project\ProjectIcons;
 use App\Repository\ProjectRepository;
+use App\Repository\TimeEntryProjectRepository;
 use App\Repository\TimeEntryRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,8 +25,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ProfileController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET', 'POST'])]
-    public function profile(Request $request, EntityManagerInterface $em, TimeEntryRepository $repo): Response
-    {
+    public function profile(
+        Request $request,
+        EntityManagerInterface $em,
+        TimeEntryRepository $repo,
+        ProjectRepository $projects,
+        TimeEntryProjectRepository $allocations,
+    ): Response {
         /** @var User $user */
         $user = $this->getUser();
 
@@ -40,10 +46,14 @@ class ProfileController extends AbstractController
             return $this->redirectToRoute('app_profile_index');
         }
 
+        $personalProjects = $projects->findPersonalProjects($user);
+
         $response = $this->render('profile/profile.html.twig', [
             'user' => $user,
             'userProfileForm' => $form,
             'stats' => $this->computeStats($user, $repo),
+            'personalProjects' => $personalProjects,
+            'hoursByProject' => $allocations->sumHoursByProject($personalProjects),
         ]);
 
         // Form soumis mais invalide : statut 422 pour que Turbo réaffiche le
@@ -109,13 +119,16 @@ class ProfileController extends AbstractController
     }
 
     #[Route('/projects', name: 'projects', methods: ['GET'])]
-    public function projects(ProjectRepository $projects): Response
+    public function projects(ProjectRepository $projects, TimeEntryProjectRepository $allocations): Response
     {
         /** @var User $user */
         $user = $this->getUser();
 
+        $personalProjects = $projects->findPersonalProjects($user);
+
         return $this->render('profile/projects.html.twig', [
-            'projects' => $projects->findPersonalProjects($user),
+            'projects' => $personalProjects,
+            'hoursByProject' => $allocations->sumHoursByProject($personalProjects),
         ]);
     }
 
@@ -181,8 +194,12 @@ class ProfileController extends AbstractController
     }
 
     #[Route('/projects/{id<\d+>}/toggle', name: 'projects_toggle', methods: ['POST'])]
-    public function toggleProject(Project $project, Request $request, EntityManagerInterface $em): Response
-    {
+    public function toggleProject(
+        Project $project,
+        Request $request,
+        EntityManagerInterface $em,
+        TimeEntryProjectRepository $allocations,
+    ): Response {
         $this->assertOwnedPersonalProject($project);
 
         if (!$this->isCsrfTokenValid('project_toggle_' . $project->getId(), (string) $request->request->get('_token'))) {
@@ -197,6 +214,7 @@ class ProfileController extends AbstractController
         if ($request->headers->has('Turbo-Frame')) {
             return $this->render('profile/_project_row.html.twig', [
                 'project' => $project,
+                'hours' => $allocations->sumHoursByProject([$project])[$project->getId()] ?? 0.0,
             ]);
         }
 

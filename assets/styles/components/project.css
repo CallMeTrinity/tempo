@@ -23,22 +23,55 @@
     }
     .ts-alloc-row {
         @apply grid items-center gap-2;
-        grid-template-columns: auto 1fr auto;
-        grid-template-areas: "dot fields remove" ". errors .";
-    }
-    .ts-alloc-dot {
-        grid-area: dot;
-        @apply w-7 h-7;
-    }
-    .ts-alloc-dot[style*="transparent"] {
-        @apply border-dashed;
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "fields remove" "errors errors";
     }
     .ts-alloc-fields {
         grid-area: fields;
         @apply flex items-center gap-2 min-w-0;
     }
-    .ts-alloc-fields select {
-        @apply flex-1 min-w-0;
+
+    /* ---- Select custom (aperçu icône + couleur) ---- */
+    .ts-cselect {
+        @apply relative flex-1 min-w-0;
+    }
+    .ts-cselect-native {
+        @apply hidden;
+    }
+    .ts-cselect-trigger {
+        @apply flex items-center gap-2 w-full text-left cursor-pointer;
+    }
+    .ts-cselect-value {
+        @apply flex items-center gap-2 min-w-0 flex-1;
+    }
+    .ts-cselect-placeholder {
+        color: color-mix(in srgb, var(--color-small-font) 70%, var(--color-rule));
+    }
+    .ts-cselect-option-name {
+        @apply truncate text-[14px] text-dark-font;
+    }
+    .ts-cselect-caret {
+        @apply flex-none text-small-font;
+    }
+    .ts-cselect-trigger[aria-expanded="true"] .ts-cselect-caret {
+        @apply rotate-180;
+    }
+    .ts-cselect-menu {
+        @apply absolute left-0 right-0 top-full mt-1 z-20 p-1 m-0 list-none;
+        @apply rounded-md bg-card border border-rule max-h-60 overflow-y-auto;
+        box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--color-dark-font) 30%, transparent);
+    }
+    .ts-cselect-option {
+        @apply flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer;
+        transition: background-color 120ms;
+    }
+    .ts-cselect-option:hover,
+    .ts-cselect-option:focus-visible {
+        @apply outline-none;
+        background: var(--color-paper-2);
+    }
+    .ts-cselect-option.is-selected {
+        background: var(--color-accent-soft);
     }
     .ts-alloc-hours {
         @apply relative flex-none;
@@ -92,10 +125,13 @@
         grid-template-columns: minmax(200px, 2fr) 100px 110px minmax(160px, 1fr);
     }
 
-    /* ---- Tableau projets personnels : 3 colonnes (projet, statut, actions) ---- */
+    /* ---- Tableau projets personnels : 4 colonnes (projet, heures, statut, actions) ---- */
     .ts-table-projects-personal .ts-table-head,
     .ts-table-projects-personal .ts-table-row {
-        grid-template-columns: minmax(200px, 2fr) 110px minmax(160px, 1fr);
+        grid-template-columns: minmax(200px, 2fr) 90px 110px minmax(160px, 1fr);
+    }
+    .ts-project-hours {
+        @apply text-dark-font text-[13px];
     }
 
     /* ---- Sélecteur d'icône (radios -> tuiles) ---- */

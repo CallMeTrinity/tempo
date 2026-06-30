@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Project;
 use App\Entity\TimeEntryProject;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -16,28 +17,38 @@ class TimeEntryProjectRepository extends ServiceEntityRepository
         parent::__construct($registry, TimeEntryProject::class);
     }
 
-    //    /**
-    //     * @return TimeEntryProject[] Returns an array of TimeEntryProject objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('t.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Total d'heures affectées, agrégé par projet, pour une liste de projets.
+     * Les projets sans affectation sont absents de la map (repli à 0 côté appelant).
+     *
+     * @param Project[] $projects
+     *
+     * @return array<int, float> projectId => total d'heures
+     */
+    public function sumHoursByProject(array $projects): array
+    {
+        $ids = array_values(array_filter(array_map(
+            static fn (Project $project): ?int => $project->getId(),
+            $projects,
+        )));
 
-    //    public function findOneBySomeField($value): ?TimeEntryProject
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('tep')
+            ->select('IDENTITY(tep.project) AS projectId', 'SUM(tep.hours) AS total')
+            ->andWhere('tep.project IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->groupBy('tep.project')
+            ->getQuery()
+            ->getResult();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row['projectId']] = (float) $row['total'];
+        }
+
+        return $map;
+    }
 }
