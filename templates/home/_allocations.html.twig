@@ -1,0 +1,16 @@
+{# Pastilles des projets affectés à une journée (icône + couleur + heures).
+   Param :
+     - entry : TimeEntry dont on rend les projectAllocations.
+   N'affiche rien si aucune affectation. #}
+{% if entry.projectAllocations is not empty %}
+    <ul class="ts-alloc-tags">
+        {% for allocation in entry.projectAllocations %}
+            {% set project = allocation.project %}
+            <li class="ts-alloc-tag" title="{{ project.name }}">
+                {% include 'admin/_project_color.html.twig' with {color: project.color, icon: project.icon, size: 20} only %}
+                <span class="ts-alloc-tag-name">{{ project.name }}</span>
+                <span class="ts-alloc-tag-hours num">{{ allocation.hours|number_format(allocation.hours == allocation.hours|round ? 0 : 1, ',', ' ') }}h</span>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

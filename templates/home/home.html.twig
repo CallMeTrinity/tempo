@@ -2,7 +2,30 @@
 
 {% block title %}Mes heures · Tempo{% endblock %}
 
+{# Une ligne d'affectation projet : sert au rendu des lignes existantes et de
+   prototype (réutilisé tel quel par le contrôleur Stimulus). #}
+{% macro alloc_row(row) %}
+    <div class="ts-alloc-row" data-project-allocations-target="row">
+        <span class="ts-project-badge ts-alloc-dot" data-project-allocations-target="dot" style="--pc: transparent;" aria-hidden="true"></span>
+        <div class="ts-alloc-fields">
+            {{ form_widget(row.project, {attr: {'data-action': 'change->project-allocations#syncPreview'}}) }}
+            <div class="ts-alloc-hours">
+                {{ form_widget(row.hours) }}
+                <span class="ts-alloc-unit">h</span>
+            </div>
+        </div>
+        <button type="button" class="ts-alloc-remove" data-action="project-allocations#remove" aria-label="Retirer ce projet">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="ts-alloc-row-errors">
+            {{ form_errors(row.project) }}
+            {{ form_errors(row.hours) }}
+        </div>
+    </div>
+{% endmacro %}
+
 {% block body %}
+    {% import _self as ui %}
     {% set today = "now"|date("Y-m-d") %}
     {% set selectedKey = selectedDate|date("Y-m-d") %}
 
@@ -201,6 +224,7 @@
                             {% if currentEntry.note %}
                                 <p class="text-[13px] text-dark-font m-0">{{ currentEntry.note }}</p>
                             {% endif %}
+                            {% include 'home/_allocations.html.twig' with {entry: currentEntry} only %}
                         </div>
                         {% if currentEntry.status.canBeUnsubmittedByUser and not is_granted('ROLE_ADMIN') %}
                             <form action="{{ path('app_time_entry_unsubmit', {id: currentEntry.id}) }}" method="post" class="inline">
@@ -254,6 +278,34 @@
 
                         {{ form_row(timeEntryForm.note) }}
 
+                        {# ---------- Affectation de projets ----------
+                           Facultatif. Disponible pour les jours travaillés et le
+                           télétravail (heures > 0). #}
+                        <div class="ts-alloc-section"
+                             data-controller="project-allocations"
+                             data-project-allocations-index-value="{{ timeEntryForm.projectAllocations|length }}"
+                             data-project-allocations-prototype-value="{{ ui.alloc_row(timeEntryForm.projectAllocations.vars.prototype)|e('html_attr') }}">
+                            <div class="ts-alloc-head">
+                                <span class="ts-card-eyebrow">Projets de la journée</span>
+                                <span class="ts-alloc-hint">Facultatif — répartissez vos heures sans dépasser le total du jour.</span>
+                            </div>
+
+                            {{ form_errors(timeEntryForm.projectAllocations) }}
+
+                            <div data-project-allocations-target="list" class="ts-alloc-list">
+                                {% for allocation in timeEntryForm.projectAllocations %}
+                                    {{ ui.alloc_row(allocation) }}
+                                {% endfor %}
+                            </div>
+
+                            <p data-project-allocations-target="empty" class="ts-alloc-empty">Aucun projet affecté.</p>
+
+                            <button type="button" class="link-q ts-alloc-add" data-action="project-allocations#add">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                Ajouter un projet
+                            </button>
+                        </div>
+
                         <div class="flex items-center justify-between gap-3 mt-2 flex-wrap">
                             <button type="submit" class="btn-submit">
                                 <span>{{ isEdit ? 'Mettre à jour' : 'Enregistrer la journée' }}</span>
@@ -301,6 +353,7 @@
                                         <span>{{ entry.dayType.label }}</span>
                                     {% endif %}
                                     {% if entry.note %}<span class="ts-row-note">{{ entry.note }}</span>{% endif %}
+                                    {% include 'home/_allocations.html.twig' with {entry: entry} only %}
                                 </div>
                                 <div class="ts-row-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</div>
                                 <div>

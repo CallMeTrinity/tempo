@@ -8,6 +8,84 @@
         border: 1px solid color-mix(in srgb, var(--pc) 32%, transparent);
     }
 
+    /* ---- Saisie : affectation d'heures par projet ---- */
+    .ts-alloc-section {
+        @apply flex flex-col gap-3 p-4 rounded-md bg-paper-2 border border-rule;
+    }
+    .ts-alloc-head {
+        @apply flex flex-col gap-1;
+    }
+    .ts-alloc-hint {
+        @apply text-[11.5px] text-small-font;
+    }
+    .ts-alloc-list {
+        @apply flex flex-col gap-2.5;
+    }
+    .ts-alloc-row {
+        @apply grid items-center gap-2;
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas: "dot fields remove" ". errors .";
+    }
+    .ts-alloc-dot {
+        grid-area: dot;
+        @apply w-7 h-7;
+    }
+    .ts-alloc-dot[style*="transparent"] {
+        @apply border-dashed;
+    }
+    .ts-alloc-fields {
+        grid-area: fields;
+        @apply flex items-center gap-2 min-w-0;
+    }
+    .ts-alloc-fields select {
+        @apply flex-1 min-w-0;
+    }
+    .ts-alloc-hours {
+        @apply relative flex-none;
+    }
+    .ts-alloc-hours input {
+        @apply w-20 pr-6 text-right;
+    }
+    .ts-alloc-unit {
+        @apply absolute right-3 top-1/2 -translate-y-1/2 text-small-font text-[12px] pointer-events-none;
+    }
+    .ts-alloc-remove {
+        grid-area: remove;
+        @apply inline-flex items-center justify-center w-8 h-8 rounded-md flex-none;
+        @apply text-small-font bg-card border border-rule cursor-pointer;
+        transition: color 150ms, border-color 150ms;
+    }
+    .ts-alloc-remove:hover {
+        @apply text-rose-600 border-rose-400;
+    }
+    .ts-alloc-row-errors {
+        grid-area: errors;
+    }
+    .ts-alloc-row-errors:empty {
+        @apply hidden;
+    }
+    .ts-alloc-empty {
+        @apply text-[12.5px] text-small-font m-0;
+    }
+    .ts-alloc-add {
+        @apply inline-flex items-center gap-1.5 self-start;
+    }
+
+    /* ---- Affichage des projets affectés (récap jour / historique) ---- */
+    .ts-alloc-tags {
+        @apply flex flex-wrap gap-1.5 m-0 mt-1 p-0 list-none;
+    }
+    .ts-alloc-tag {
+        @apply inline-flex items-center gap-1.5 pl-1 pr-2 py-0.5 rounded-full;
+        @apply bg-card border border-rule text-[12px] text-dark-font;
+    }
+    .ts-alloc-tag-name {
+        @apply truncate max-w-32;
+    }
+    .ts-alloc-tag-hours {
+        @apply text-small-font text-[11px];
+    }
+
     /* ---- Tableau projets : 4 colonnes (projet, membres, statut, actions) ---- */
     .ts-table-projects .ts-table-head,
     .ts-table-projects .ts-table-row {

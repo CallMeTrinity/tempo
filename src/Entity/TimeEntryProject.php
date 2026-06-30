@@ -21,10 +21,12 @@ class TimeEntryProject
 
     #[ORM\ManyToOne(inversedBy: 'timeEntryProjects')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: 'Sélectionnez un projet.')]
     private ?Project $project = null;
 
     #[ORM\Column]
-    #[Assert\GreaterThanOrEqual(value: 0.5)]
+    #[Assert\NotNull(message: 'Indiquez un nombre d’heures.')]
+    #[Assert\GreaterThanOrEqual(value: 0.5, message: 'Minimum 0,5 h par projet.')]
     private ?float $hours = null;
 
     public function getId(): ?int

@@ -75,7 +75,7 @@ class HomeController extends AbstractController
         );
         $showForm = !$isReadOnly && !$isPlannedNonWork;
 
-        $form = $this->createForm(TimeEntryType::class, $timeEntry);
+        $form = $this->createForm(TimeEntryType::class, $timeEntry, ['user' => $user]);
         $form->get('isRemote')->setData($timeEntry->getDayType() === DayType::REMOTE);
         $form->handleRequest($request);
 

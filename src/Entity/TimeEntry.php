@@ -58,6 +58,7 @@ class TimeEntry
      * @var Collection<int, TimeEntryProject>
      */
     #[ORM\OneToMany(targetEntity: TimeEntryProject::class, mappedBy: 'timeEntry', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Assert\Valid]
     private Collection $projectAllocations;
 
     public function __construct()
@@ -279,5 +280,56 @@ class TimeEntry
             },
             0.0
         );
+    }
+
+    /**
+     * Cohérence des affectations projet :
+     * - un jour sans heures travaillées ne peut rien affecter ;
+     * - un même projet ne peut apparaître qu'une fois ;
+     * - la somme affectée ne peut dépasser les heures de la journée.
+     */
+    #[Assert\Callback]
+    public function validateProjectAllocations(ExecutionContextInterface $context): void
+    {
+        if ($this->projectAllocations->isEmpty()) {
+            return;
+        }
+
+        $hoursWorked = $this->getHoursWorked();
+        if ($hoursWorked <= 0) {
+            $context->buildViolation('Aucune heure travaillée ce jour : impossible d’affecter des projets.')
+                ->atPath('projectAllocations')
+                ->addViolation();
+
+            return;
+        }
+
+        $seen = [];
+        foreach ($this->projectAllocations as $allocation) {
+            $project = $allocation->getProject();
+            if ($project === null) {
+                continue;
+            }
+            $key = (string) $project->getId();
+            if (isset($seen[$key])) {
+                $context->buildViolation('Un même projet ne peut être affecté qu’une fois par jour.')
+                    ->atPath('projectAllocations')
+                    ->addViolation();
+
+                return;
+            }
+            $seen[$key] = true;
+        }
+
+        $allocated = $this->getAllocatedHours();
+        if ($allocated > $hoursWorked) {
+            $context->buildViolation(sprintf(
+                'Le total affecté aux projets (%s h) dépasse les heures de la journée (%s h).',
+                rtrim(rtrim(number_format($allocated, 1, ',', ' '), '0'), ','),
+                rtrim(rtrim(number_format($hoursWorked, 1, ',', ' '), '0'), ','),
+            ))
+                ->atPath('projectAllocations')
+                ->addViolation();
+        }
     }
 }
