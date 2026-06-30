@@ -9,7 +9,14 @@
 
     <main class="ts-shell">
         {% include 'components/topbar.html.twig' with {active: 'month'} only %}
-        {% include 'components/flashes.html.twig' only %}
+
+        {# Vue mois dans un turbo-frame : la planification met à jour la grille et
+           les totaux sans recharger la page. `advance` garde l'URL à jour pour
+           la navigation entre mois ; `display: contents` préserve la mise en
+           page flex. Les liens de jour mènent vers la semaine (autre page) : ils
+           portent data-turbo-frame="_top" pour sortir du frame. #}
+        <turbo-frame id="month-view" data-turbo-action="advance" style="display: contents;">
+            {% include 'components/flashes.html.twig' only %}
 
         {# ---------- Header ---------- #}
         <section class="ts-month-head">
@@ -111,7 +118,7 @@
                             <span class="ts-month-cell-num">{{ d|date("d") }}</span>
                         </span>
                     {% else %}
-                        <a class="{{ classAttr }}" href="{{ path('app_home', {date: key}) }}">
+                        <a class="{{ classAttr }}" href="{{ path('app_home', {date: key}) }}" data-turbo-frame="_top">
                             <span class="ts-month-cell-num">{{ d|date("d") }}</span>
                             {% if entry %}
                                 <span class="ts-month-cell-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</span>
@@ -125,5 +132,6 @@
 
         {# ---------- Planning panel ---------- #}
         {% include 'components/planning_form.html.twig' with {planningForm: planningForm} only %}
+        </turbo-frame>
     </main>
 {% endblock %}

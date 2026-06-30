@@ -42,6 +42,23 @@ class ProjectRepository extends ServiceEntityRepository
     }
 
     /**
+     * Projets personnels d'un utilisateur (pour son profil).
+     *
+     * @return Project[]
+     */
+    public function findPersonalProjects(User $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.scope = :personal')
+            ->andWhere('p.owner = :user')
+            ->setParameter('personal', ProjectScope::PERSONAL)
+            ->setParameter('user', $user)
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Tous les projets d'équipe (pour l'admin).
      *
      * @return Project[]

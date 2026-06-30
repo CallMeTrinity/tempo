@@ -7,7 +7,6 @@
 
     <main class="ts-shell">
         {% include 'components/topbar.html.twig' with {active: 'profile'} only %}
-        {% include 'components/flashes.html.twig' only %}
 
         {# ---------- Hero ---------- #}
         <section class="pf-hero">
@@ -68,8 +67,16 @@
             </div>
         </section>
 
-        {# ---------- Form (Identité + Préférences) + Account info ---------- #}
-        {{ form_start(userProfileForm, {attr: {class: 'flex flex-col gap-6'}}) }}
+        {# ---------- Form (Identité + Préférences) ----------
+           Enveloppé dans un turbo-frame : la soumission se fait sans recharger
+           la page (erreurs de validation et flash de succès rendus dans le
+           frame). `display: contents` rend le frame transparent pour la mise en
+           page. Le flash est volontairement dans le frame pour rester visible
+           après extraction par Turbo (sinon consommé en haut de page). #}
+        <turbo-frame id="profile-form" style="display: contents;">
+            {% include 'components/flashes.html.twig' only %}
+
+            {{ form_start(userProfileForm, {attr: {class: 'flex flex-col gap-6'}}) }}
             {% if not userProfileForm.vars.valid %}
                 <div class="flash flash-error">{{ form_errors(userProfileForm) }}</div>
             {% endif %}
@@ -119,7 +126,8 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </button>
             </div>
-        {{ form_end(userProfileForm) }}
+            {{ form_end(userProfileForm) }}
+        </turbo-frame>
 
         <section>
             <div class="ts-card">
@@ -159,6 +167,22 @@
                         <span class="kv-k">Email vérifié</span>
                         <span class="kv-v">{{ user.verified ? 'Oui' : 'Non' }}</span>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="ts-card">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                        <div class="ts-card-eyebrow">Projets</div>
+                        <h2 class="ts-card-title">Mes projets personnels</h2>
+                        <p class="ts-card-sub">Créez vos propres projets pour les associer à votre saisie d'heures.</p>
+                    </div>
+                    <a href="{{ path('app_profile_projects') }}" class="btn-submit">
+                        <span>Gérer mes projets</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
                 </div>
             </div>
         </section>

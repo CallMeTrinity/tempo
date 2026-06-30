@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profil · Projets · Tempo{% endblock %}
+
+{% block body %}
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'profile'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">Profil · Projets</div>
+            <h1 class="ts-hero-title"><span>Mes projets</span></h1>
+        </section>
+
+        <section class="ts-card">
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                    <div class="ts-card-eyebrow">Projets personnels</div>
+                    <h2 class="ts-card-title">{{ projects|length }} projet{{ projects|length > 1 ? 's' : '' }}</h2>
+                    <p class="ts-card-sub">Projets visibles uniquement par vous, pour votre saisie d'heures.</p>
+                </div>
+                <a href="{{ path('app_profile_projects_new') }}" class="btn-submit">
+                    <span>Nouveau projet</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                </a>
+            </div>
+
+            {% if projects is empty %}
+                <div class="ts-empty">Aucun projet personnel. Créez-en un pour commencer.</div>
+            {% else %}
+                <div class="ts-scroll-x">
+                    <div class="ts-table ts-table-projects-personal">
+                        <div class="ts-table-head">
+                            <div>Projet</div>
+                            <div>Statut</div>
+                            <div></div>
+                        </div>
+
+                        {% for project in projects %}
+                            {% include 'profile/_project_row.html.twig' with {project: project} only %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

@@ -13,7 +13,14 @@
 
     <main class="ts-shell">
         {% include 'components/topbar.html.twig' with {active: 'home'} only %}
-        {% include 'components/flashes.html.twig' only %}
+
+        {# Toute la vue semaine dans un turbo-frame : saisie et planification se
+           mettent à jour sans recharger la page, grille / totaux / historique
+           restent cohérents. `advance` garde l'URL à jour pour la navigation
+           jour & semaine ; `display: contents` préserve la mise en page flex.
+           Les flashes sont dans le frame pour rester visibles après extraction. #}
+        <turbo-frame id="week-view" data-turbo-action="advance" style="display: contents;">
+            {% include 'components/flashes.html.twig' only %}
 
         {# ---------- Hero ---------- #}
         <section class="ts-hero">
@@ -322,5 +329,6 @@
 
         {# ---------- Planning panel ---------- #}
         {% include 'components/planning_form.html.twig' with {planningForm: planningForm} only %}
+        </turbo-frame>
     </main>
 {% endblock %}

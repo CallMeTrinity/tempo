@@ -14,6 +14,12 @@
         grid-template-columns: minmax(200px, 2fr) 100px 110px minmax(160px, 1fr);
     }
 
+    /* ---- Tableau projets personnels : 3 colonnes (projet, statut, actions) ---- */
+    .ts-table-projects-personal .ts-table-head,
+    .ts-table-projects-personal .ts-table-row {
+        grid-template-columns: minmax(200px, 2fr) 110px minmax(160px, 1fr);
+    }
+
     /* ---- Sélecteur d'icône (radios -> tuiles) ---- */
     .ts-iconpick {
         @apply flex flex-wrap gap-2;

@@ -7,7 +7,7 @@
 {% if active == '' %}
     {% if currentRoute starts with 'app_admin_' %}
         {% set active = 'admin' %}
-    {% elseif currentRoute == 'app_profile' %}
+    {% elseif currentRoute starts with 'app_profile_' %}
         {% set active = 'profile' %}
     {% elseif currentRoute in ['app_month', 'app_month_current'] %}
         {% set active = 'month' %}
@@ -32,7 +32,7 @@
         {% else %}
             <a href="{{ path('app_home') }}" class="ts-nav-link {{ active == 'home' ? 'is-active' : '' }}">Semaine</a>
             <a href="{{ path('app_month_current') }}" class="ts-nav-link {{ active == 'month' ? 'is-active' : '' }}">Mois</a>
-            <a href="{{ path('app_profile') }}" class="ts-nav-link {{ active == 'profile' ? 'is-active' : '' }}">Profil</a>
+            <a href="{{ path('app_profile_index') }}" class="ts-nav-link {{ active == 'profile' ? 'is-active' : '' }}">Profil</a>
         {% endif %}
     </nav>
 

@@ -65,7 +65,15 @@ class ProjectType extends AbstractType
                 'choice_attr' => fn (string $key): array => ['data-hex' => ProjectColors::hex($key)],
                 'constraints' => [new Assert\Choice(choices: array_keys(ProjectColors::COLORS))],
             ])
-            ->add('members', EntityType::class, [
+            ->add('isActive', CheckboxType::class, [
+                'label' => 'Projet actif',
+                'required' => false,
+            ])
+        ;
+
+        // Un projet personnel n'a pas de membres : on n'expose pas le champ.
+        if (!$options['personal']) {
+            $builder->add('members', EntityType::class, [
                 'label' => 'Membres',
                 'class' => User::class,
                 'choice_label' => fn (User $user): string => $user->getFullName() ?? $user->getEmail(),
@@ -75,18 +83,17 @@ class ProjectType extends AbstractType
                 'multiple' => true,
                 'expanded' => true,
                 'required' => false,
-            ])
-            ->add('isActive', CheckboxType::class, [
-                'label' => 'Projet actif',
-                'required' => false,
-            ])
-        ;
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => Project::class,
+            'personal' => false,
         ]);
+
+        $resolver->setAllowedTypes('personal', 'bool');
     }
 }

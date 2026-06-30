@@ -126,7 +126,7 @@ class HomeController extends AbstractController
             'action' => $this->generateUrl('app_planning_create'),
         ]);
 
-        return $this->render('home/home.html.twig', [
+        $response = $this->render('home/home.html.twig', [
             'timeEntryForm' => $form,
             'planningForm' => $planningForm,
             'isEdit' => $isEdit,
@@ -149,6 +149,14 @@ class HomeController extends AbstractController
             'weekIso' => $weekStart->format('o-\WW'),
             'weekSubmittableCount' => $weekSubmittableCount,
         ]);
+
+        // Saisie soumise mais invalide : statut 422 pour que Turbo réaffiche le
+        // frame avec les erreurs (un 200 serait interprété comme un succès).
+        if ($showForm && $form->isSubmitted()) {
+            $response->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return $response;
     }
 
     #[Route('/time-entry/{id}/delete', name: 'app_time_entry_delete', methods: ['POST'])]
