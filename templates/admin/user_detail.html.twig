@@ -71,6 +71,51 @@
 
         <section class="ts-card">
             <div>
+                <div class="ts-card-eyebrow">Tous projets confondus</div>
+                <h2 class="ts-card-title">Projets</h2>
+                <p class="ts-card-sub">Cumul d'heures affectées par {{ user.fullName ?? user.email }}, personnels comme d'équipe.</p>
+            </div>
+
+            {% if projectHours is empty %}
+                <div class="ts-empty">Aucune heure affectée à un projet.</div>
+            {% else %}
+                <div class="ts-scroll-x">
+                    <div class="ts-table ts-table-user-projects">
+                        <div class="ts-table-head">
+                            <div>Projet</div>
+                            <div class="ts-table-num">Heures</div>
+                            <div>Type</div>
+                        </div>
+                        {% for row in projectHours %}
+                            <div class="ts-table-row">
+                                <div class="ts-table-user">
+                                    {% include 'admin/_project_color.html.twig' with {color: row.project.color, icon: row.project.icon, size: 32} only %}
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="ts-table-user-name">{{ row.project.name }}</span>
+                                        {% if row.project.description %}
+                                            <span class="ts-table-user-meta">{{ row.project.description }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="ts-project-hours num" title="Heures affectées par ce membre">
+                                    {{ row.hours|number_format(row.hours == row.hours|round ? 0 : 1, ',', ' ') }}h
+                                </div>
+                                <div>
+                                    {% if row.project.scope.value == 'team' %}
+                                        <span class="ts-row-badge ts-badge-submitted">Équipe</span>
+                                    {% else %}
+                                        <span class="ts-row-badge ts-badge-draft">Personnel</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="ts-card">
+            <div>
                 <div class="ts-card-eyebrow">60 dernières entrées</div>
                 <h2 class="ts-card-title">Historique</h2>
             </div>

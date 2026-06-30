@@ -13,6 +13,7 @@ use App\Project\ProjectColors;
 use App\Project\ProjectIcons;
 use App\Repository\BlacklistedEmailRepository;
 use App\Repository\ProjectRepository;
+use App\Repository\TimeEntryProjectRepository;
 use App\Repository\TimeEntryRepository;
 use App\Repository\UserRepository;
 use App\Service\TimesheetService;
@@ -85,6 +86,7 @@ class AdminController extends AbstractController
         TimeEntryRepository $entries,
         TimesheetService $timesheet,
         UserRepository $users,
+        TimeEntryProjectRepository $allocations,
         Request $request,
     ): Response {
         /** @var User $me */
@@ -101,6 +103,7 @@ class AdminController extends AbstractController
 
         $stats = $timesheet->computeMonthlyStats($user, $year, $month);
         $recent = $entries->findRecentByUser($user, 60);
+        $projectHours = $allocations->findProjectHoursForUser($user);
 
         $prev = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month))->modify('-1 month');
         $next = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month))->modify('+1 month');
@@ -111,6 +114,7 @@ class AdminController extends AbstractController
             'month' => $month,
             'stats' => $stats,
             'recentEntries' => $recent,
+            'projectHours' => $projectHours,
             'prev' => ['year' => (int) $prev->format('Y'), 'month' => (int) $prev->format('n')],
             'next' => ['year' => (int) $next->format('Y'), 'month' => (int) $next->format('n')],
             'pendingCount' => $entries->countPendingApproval(),
@@ -358,10 +362,35 @@ class AdminController extends AbstractController
     }
 
     #[Route('/projects', name: 'projects', methods: ['GET'])]
-    public function projects(ProjectRepository $projects): Response
+    public function projects(ProjectRepository $projects, TimeEntryProjectRepository $allocations): Response
     {
+        $teamProjects = $projects->findTeamProjects();
+
         return $this->render('admin/projects.html.twig', [
-            'projects' => $projects->findTeamProjects(),
+            'projects' => $teamProjects,
+            'hoursByProject' => $allocations->sumHoursByProject($teamProjects),
+        ]);
+    }
+
+    #[Route('/projects/{id<\d+>}', name: 'project_detail', methods: ['GET'])]
+    public function projectDetail(
+        Project $project,
+        TimeEntryRepository $entries,
+        UserRepository $users,
+        TimeEntryProjectRepository $allocations,
+    ): Response {
+        $memberHours = $allocations->findMemberHoursForProject($project);
+        $totalHours = array_sum(array_map(
+            static fn (array $row): float => $row['hours'],
+            $memberHours,
+        ));
+
+        return $this->render('admin/project_detail.html.twig', [
+            'project' => $project,
+            'memberHours' => $memberHours,
+            'totalHours' => $totalHours,
+            'pendingCount' => $entries->countPendingApproval(),
+            'unverifiedCount' => $users->countUnverified(),
         ]);
     }
 

@@ -92,4 +92,82 @@ class TimeEntryProjectRepository extends ServiceEntityRepository
 
         return $map;
     }
+
+    /**
+     * Tous les projets (personnels comme d'équipe) sur lesquels l'utilisateur
+     * a affecté des heures, avec son cumul par projet. Trié par heures décroissantes.
+     *
+     * @return list<array{project: Project, hours: float}>
+     */
+    public function findProjectHoursForUser(User $user): array
+    {
+        $rows = $this->createQueryBuilder('tep')
+            ->select('IDENTITY(tep.project) AS projectId', 'SUM(tep.hours) AS hours')
+            ->innerJoin('tep.timeEntry', 'te')
+            ->andWhere('te.user = :user')
+            ->setParameter('user', $user)
+            ->groupBy('tep.project')
+            ->orderBy('hours', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        if ($rows === []) {
+            return [];
+        }
+
+        $projectsById = [];
+        foreach ($this->getEntityManager()->getRepository(Project::class)
+            ->findBy(['id' => array_map(static fn (array $row): int => (int) $row['projectId'], $rows)]) as $project) {
+            $projectsById[$project->getId()] = $project;
+        }
+
+        $result = [];
+        foreach ($rows as $row) {
+            $project = $projectsById[(int) $row['projectId']] ?? null;
+            if ($project !== null) {
+                $result[] = ['project' => $project, 'hours' => (float) $row['hours']];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Tous les utilisateurs ayant affecté des heures sur un projet donné,
+     * avec leur cumul. Trié par heures décroissantes.
+     *
+     * @return list<array{user: User, hours: float}>
+     */
+    public function findMemberHoursForProject(Project $project): array
+    {
+        $rows = $this->createQueryBuilder('tep')
+            ->select('IDENTITY(te.user) AS userId', 'SUM(tep.hours) AS hours')
+            ->innerJoin('tep.timeEntry', 'te')
+            ->andWhere('tep.project = :project')
+            ->setParameter('project', $project)
+            ->groupBy('te.user')
+            ->orderBy('hours', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        if ($rows === []) {
+            return [];
+        }
+
+        $usersById = [];
+        foreach ($this->getEntityManager()->getRepository(User::class)
+            ->findBy(['id' => array_map(static fn (array $row): int => (int) $row['userId'], $rows)]) as $user) {
+            $usersById[$user->getId()] = $user;
+        }
+
+        $result = [];
+        foreach ($rows as $row) {
+            $user = $usersById[(int) $row['userId']] ?? null;
+            if ($user !== null) {
+                $result[] = ['user' => $user, 'hours' => (float) $row['hours']];
+            }
+        }
+
+        return $result;
+    }
 }

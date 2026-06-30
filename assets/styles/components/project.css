@@ -119,10 +119,22 @@
         @apply text-small-font text-[11px];
     }
 
-    /* ---- Tableau projets : 4 colonnes (projet, membres, statut, actions) ---- */
+    /* ---- Tableau projets : 5 colonnes (projet, membres, heures, statut, actions) ---- */
     .ts-table-projects .ts-table-head,
     .ts-table-projects .ts-table-row {
-        grid-template-columns: minmax(200px, 2fr) 100px 110px minmax(160px, 1fr);
+        grid-template-columns: minmax(200px, 2fr) 100px 100px 110px minmax(160px, 1fr);
+    }
+
+    /* ---- Tableau projets d'un membre (détail user admin) : 3 colonnes ---- */
+    .ts-table-user-projects .ts-table-head,
+    .ts-table-user-projects .ts-table-row {
+        grid-template-columns: minmax(200px, 2fr) 100px 110px;
+    }
+
+    /* ---- Tableau membres d'un projet (détail projet admin) : 2 colonnes ---- */
+    .ts-table-project-members .ts-table-head,
+    .ts-table-project-members .ts-table-row {
+        grid-template-columns: minmax(200px, 2fr) 120px;
     }
 
     /* ---- Tableau projets personnels : 4 colonnes (projet, heures, statut, actions) ---- */
