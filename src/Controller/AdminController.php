@@ -3,10 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\BlacklistedEmail;
+use App\Entity\Project;
 use App\Entity\TimeEntry;
 use App\Entity\User;
+use App\Enum\ProjectScope;
 use App\Enum\Status;
+use App\Form\ProjectType;
+use App\Project\ProjectColors;
+use App\Project\ProjectIcons;
 use App\Repository\BlacklistedEmailRepository;
+use App\Repository\ProjectRepository;
 use App\Repository\TimeEntryRepository;
 use App\Repository\UserRepository;
 use App\Service\TimesheetService;
@@ -349,5 +355,83 @@ class AdminController extends AbstractController
         $this->addFlash('success', sprintf('%s retiré de la liste noire.', $email));
 
         return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_admin_registrations'));
+    }
+
+    #[Route('/projects', name: 'projects', methods: ['GET'])]
+    public function projects(ProjectRepository $projects): Response
+    {
+        return $this->render('admin/projects.html.twig', [
+            'projects' => $projects->findTeamProjects(),
+        ]);
+    }
+
+    #[Route('/projects/new', name: 'project_new', methods: ['GET', 'POST'])]
+    public function newProject(Request $request, EntityManagerInterface $em): Response
+    {
+        $now = new DateTimeImmutable();
+        $project = (new Project())
+            ->setScope(ProjectScope::TEAM)
+            ->setOwner(null)
+            ->setIsActive(true)
+            ->setIcon(ProjectIcons::DEFAULT)
+            ->setColor(ProjectColors::DEFAULT)
+            ->setCreatedAt($now)
+            ->setUpdatedAt($now);
+
+        $form = $this->createForm(ProjectType::class, $project);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // On force le scope au cas où (le champ n'est pas exposé au form).
+            $project->setScope(ProjectScope::TEAM)->setOwner(null);
+            $em->persist($project);
+            $em->flush();
+            $this->addFlash('success', sprintf('Projet « %s » créé.', $project->getName()));
+
+            return $this->redirectToRoute('app_admin_projects');
+        }
+
+        return $this->render('admin/project_form.html.twig', [
+            'form' => $form,
+            'project' => $project,
+            'mode' => 'new',
+        ]);
+    }
+
+    #[Route('/projects/{id<\d+>}/edit', name: 'project_edit', methods: ['GET', 'POST'])]
+    public function editProject(Project $project, Request $request, EntityManagerInterface $em): Response
+    {
+        $form = $this->createForm(ProjectType::class, $project);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $project->setUpdatedAt(new DateTimeImmutable());
+            $em->flush();
+            $this->addFlash('success', sprintf('Projet « %s » mis à jour.', $project->getName()));
+
+            return $this->redirectToRoute('app_admin_projects');
+        }
+
+        return $this->render('admin/project_form.html.twig', [
+            'form' => $form,
+            'project' => $project,
+            'mode' => 'edit',
+        ]);
+    }
+
+    #[Route('/projects/{id<\d+>}/toggle', name: 'project_toggle', methods: ['POST'])]
+    public function toggleProject(Project $project, Request $request, EntityManagerInterface $em): Response
+    {
+        if (!$this->isCsrfTokenValid('project_toggle_' . $project->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF invalide.');
+        }
+
+        $project->setIsActive(!$project->isActive())->setUpdatedAt(new DateTimeImmutable());
+        $em->flush();
+        $this->addFlash('success', $project->isActive()
+            ? sprintf('Projet « %s » activé.', $project->getName())
+            : sprintf('Projet « %s » désactivé.', $project->getName()));
+
+        return $this->redirectToRoute('app_admin_projects');
     }
 }

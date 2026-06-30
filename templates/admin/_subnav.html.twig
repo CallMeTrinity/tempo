@@ -1,8 +1,9 @@
 {# Sous-navigation de l'espace admin.
    Paramètres :
-     - active : 'users' | 'entries' | 'registrations'
+     - active : 'users' | 'entries' | 'registrations' | 'projects'
      - pendingCount    : nb d'entrées SUBMITTED (queue d'approbation)
-     - unverifiedCount : nb de comptes en attente de validation (optionnel) #}
+     - unverifiedCount : nb de comptes en attente de validation (optionnel)
+     - projectsCount   : nb de projets d'équipe (optionnel) #}
 {% set active = active|default('') %}
 {% set unverifiedCount = unverifiedCount|default(0) %}
 
@@ -20,6 +21,12 @@
         Comptes
         {% if unverifiedCount > 0 %}
             <span class="ts-subnav-pill ts-subnav-pill-warn">{{ unverifiedCount }}</span>
+        {% endif %}
+    </a>
+    <a href="{{ path('app_admin_projects') }}" class="ts-subnav-link {{ active == 'projects' ? 'is-active' : '' }}">
+        Projets
+        {% if projectsCount is defined and projectsCount > 0 %}
+            <span class="ts-subnav-pill">{{ projectsCount }}</span>
         {% endif %}
     </a>
 </nav>

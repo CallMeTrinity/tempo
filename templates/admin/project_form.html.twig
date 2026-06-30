@@ -1,0 +1,185 @@
+{% extends 'base.html.twig' %}
+{% form_theme form _self %}
+
+{# Rendu personnalisé des deux sélecteurs visuels. Les blocs ciblent les champs
+   par leur nom (préfixe de bloc 'project' + nom de champ), donc ils ne
+   s'appliquent qu'ici, sans toucher au thème global des autres formulaires. #}
+{% block _project_icon_widget %}
+    <div class="ts-iconpick">
+        {% for choice in form %}
+            {{ form_widget(choice) }}
+            <label for="{{ choice.vars.id }}" title="{{ choice.vars.label }}">
+                {% include 'admin/_project_icon.html.twig' with {icon: choice.vars.value, size: 20} only %}
+            </label>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block _project_color_widget %}
+    {% set colors = constant('App\\Project\\ProjectColors::COLORS') %}
+    <div class="ts-colorpick">
+        {% for choice in form %}
+            {{ form_widget(choice) }}
+            <label for="{{ choice.vars.id }}"
+                   title="{{ choice.vars.label }}"
+                   style="--pc: {{ (colors[choice.vars.value] ?? colors['blue']).hex }};"></label>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block _project_members_widget %}
+    <div class="ts-memberpick" data-memberpick>
+        <div class="ts-memberpick-search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" class="inp ts-memberpick-input" placeholder="Rechercher une personne…" aria-label="Rechercher un membre" data-memberpick-search>
+        </div>
+        <p class="ts-memberpick-meta"><span data-memberpick-count>0</span> membre(s) sélectionné(s)</p>
+        <div class="ts-memberpick-list">
+            {% for choice in form %}
+                {% set parts = choice.vars.label|trim|split(' ')|filter(p => p is not empty) %}
+                {% set initials = (parts|length > 1 ? (parts|first|slice(0, 1) ~ parts|last|slice(0, 1)) : choice.vars.label|slice(0, 2))|upper %}
+                <label class="ts-memberpick-option" data-member data-label="{{ choice.vars.label|lower }}">
+                    {{ form_widget(choice) }}
+                    <span class="ts-avatar ts-avatar-sm">{{ initials }}</span>
+                    <span class="ts-memberpick-name">{{ choice.vars.label }}</span>
+                    <span class="ts-memberpick-tick">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4 10-10"/></svg>
+                    </span>
+                </label>
+            {% else %}
+                <p class="ts-memberpick-meta">Aucun utilisateur disponible.</p>
+            {% endfor %}
+            <p class="ts-memberpick-meta" data-memberpick-empty hidden>Aucun résultat.</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block title %}Admin · {{ mode == 'new' ? 'Nouveau projet' : 'Éditer le projet' }} · Tempo{% endblock %}
+
+{% block body %}
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'admin'} only %}
+        {% include 'components/flashes.html.twig' only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">Administration · Projets</div>
+            <h1 class="ts-hero-title">
+                <span>{{ mode == 'new' ? 'Nouveau projet' : 'Éditer ' ~ project.name }}</span>
+            </h1>
+        </section>
+
+        {{ form_start(form, {attr: {class: 'flex flex-col gap-6'}}) }}
+            {% if not form.vars.valid %}
+                <div class="flash flash-error">{{ form_errors(form) }}</div>
+            {% endif %}
+
+            <section class="pf-cols">
+                <div class="ts-card">
+                    <div>
+                        <div class="ts-card-eyebrow">Informations</div>
+                        <h2 class="ts-card-title">Identité du projet</h2>
+                        <p class="ts-card-sub">Nom, description et apparence visible par les membres.</p>
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        {{ form_row(form.name) }}
+                        {{ form_row(form.description) }}
+
+                        {# ---- Aperçu en direct ---- #}
+                        <div class="field">
+                            <span class="lbl">Aperçu</span>
+                            <div class="ts-project-preview">
+                                {% include 'admin/_project_color.html.twig' with {
+                                    color: project.color,
+                                    icon: project.icon,
+                                    size: 32,
+                                } only %}
+                                <span class="ts-project-preview-name" data-project-preview-name>
+                                    {{ project.name ?: 'Nom du projet' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {{ form_row(form.icon) }}
+                        {{ form_row(form.color) }}
+                    </div>
+                </div>
+
+                <div class="ts-card">
+                    <div>
+                        <div class="ts-card-eyebrow">Accès</div>
+                        <h2 class="ts-card-title">Membres & statut</h2>
+                        <p class="ts-card-sub">Les membres associés voient le projet en saisie d'heures.</p>
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        {{ form_row(form.members) }}
+                        {{ form_row(form.isActive) }}
+                    </div>
+                </div>
+            </section>
+
+            <div class="flex items-center gap-3">
+                <button type="submit" class="btn-submit">
+                    <span>{{ mode == 'new' ? 'Créer le projet' : 'Enregistrer' }}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
+                <a href="{{ path('app_admin_projects') }}" class="link-q">Annuler</a>
+            </div>
+        {{ form_end(form) }}
+    </main>
+
+    <script>
+        (() => {
+            const badge = document.querySelector('.ts-project-preview .ts-project-badge');
+            const nameOut = document.querySelector('[data-project-preview-name]');
+            const nameIn = document.getElementById('{{ form.name.vars.id }}');
+            const iconInputs = document.querySelectorAll('.ts-iconpick input[type="radio"]');
+            const colorInputs = document.querySelectorAll('.ts-colorpick input[type="radio"]');
+
+            if (nameIn && nameOut) {
+                nameIn.addEventListener('input', () => {
+                    nameOut.textContent = nameIn.value.trim() || 'Nom du projet';
+                });
+            }
+
+            iconInputs.forEach((input) => input.addEventListener('change', () => {
+                if (!badge || !input.checked) return;
+                const svg = input.nextElementSibling?.querySelector('svg');
+                if (svg) badge.innerHTML = svg.outerHTML;
+            }));
+
+            colorInputs.forEach((input) => input.addEventListener('change', () => {
+                if (!badge || !input.checked) return;
+                badge.style.setProperty('--pc', input.dataset.hex);
+            }));
+
+            // ---- Sélecteur de membres : recherche + compteur ----
+            const memberpick = document.querySelector('[data-memberpick]');
+            if (memberpick) {
+                const search = memberpick.querySelector('[data-memberpick-search]');
+                const countOut = memberpick.querySelector('[data-memberpick-count]');
+                const emptyOut = memberpick.querySelector('[data-memberpick-empty]');
+                const options = Array.from(memberpick.querySelectorAll('[data-member]'));
+
+                const updateCount = () => {
+                    if (countOut) countOut.textContent = options.filter((o) => o.querySelector('input')?.checked).length;
+                };
+                const filter = () => {
+                    const q = (search?.value || '').trim().toLowerCase();
+                    let visible = 0;
+                    options.forEach((o) => {
+                        const match = o.dataset.label.includes(q);
+                        o.hidden = !match;
+                        if (match) visible += 1;
+                    });
+                    if (emptyOut) emptyOut.hidden = visible > 0;
+                };
+
+                search?.addEventListener('input', filter);
+                memberpick.addEventListener('change', updateCount);
+                updateCount();
+            }
+        })();
+    </script>
+{% endblock %}

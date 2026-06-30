@@ -1,0 +1,17 @@
+{# Rend l'identité visuelle d'un projet : pastille colorée, contenant
+   éventuellement son icône. Réutilisable en liste admin, aperçu de formulaire
+   et (à venir) saisie journalière / export.
+   Source des teintes : App\Project\ProjectColors::COLORS (via constant()).
+   Params :
+     - color : clé de couleur (ex. 'blue'). Repli sur la couleur par défaut.
+     - icon  : clé d'icône optionnelle ; si fournie, rendue dans la pastille.
+     - size  : diamètre de la pastille en px (défaut 28). #}
+{% set colors = constant('App\\Project\\ProjectColors::COLORS') %}
+{% set default = constant('App\\Project\\ProjectColors::DEFAULT') %}
+{% set hex = (colors[color] ?? colors[default]).hex %}
+{% set size = size|default(28) %}
+<span class="ts-project-badge" style="--pc: {{ hex }}; width: {{ size }}px; height: {{ size }}px;">
+    {%- if icon is defined and icon is not null -%}
+        {% include 'admin/_project_icon.html.twig' with {icon: icon, size: (size * 0.55)|round} only %}
+    {%- endif -%}
+</span>

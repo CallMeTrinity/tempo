@@ -1,0 +1,126 @@
+@layer components {
+    /* ---- Identité visuelle d'un projet (icône dans une pastille colorée) ----
+       --pc : teinte de base, fournie inline depuis App\Project\ProjectColors. */
+    .ts-project-badge {
+        @apply inline-flex items-center justify-center rounded-lg flex-none;
+        color: var(--pc);
+        background: color-mix(in srgb, var(--pc) 14%, var(--color-card));
+        border: 1px solid color-mix(in srgb, var(--pc) 32%, transparent);
+    }
+
+    /* ---- Tableau projets : 4 colonnes (projet, membres, statut, actions) ---- */
+    .ts-table-projects .ts-table-head,
+    .ts-table-projects .ts-table-row {
+        grid-template-columns: minmax(200px, 2fr) 100px 110px minmax(160px, 1fr);
+    }
+
+    /* ---- Sélecteur d'icône (radios -> tuiles) ---- */
+    .ts-iconpick {
+        @apply flex flex-wrap gap-2;
+    }
+    .ts-iconpick input[type="radio"] {
+        @apply sr-only;
+    }
+    .ts-iconpick label {
+        @apply inline-flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer;
+        @apply text-small-font bg-card border border-rule;
+        transition: background-color 150ms, color 150ms, border-color 150ms;
+    }
+    .ts-iconpick label:hover {
+        @apply text-dark-font border-dark-font;
+    }
+    .ts-iconpick input[type="radio"]:checked + label {
+        @apply bg-dark-font text-light-font border-dark-font;
+    }
+    .ts-iconpick input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    /* ---- Sélecteur de couleur (radios -> pastilles) ---- */
+    .ts-colorpick {
+        @apply flex flex-wrap gap-2;
+    }
+    .ts-colorpick input[type="radio"] {
+        @apply sr-only;
+    }
+    .ts-colorpick label {
+        @apply inline-block w-7 h-7 rounded-full cursor-pointer;
+        background: var(--pc);
+        box-shadow: 0 0 0 1px var(--color-rule);
+        transition: box-shadow 150ms, transform 150ms;
+    }
+    .ts-colorpick label:hover {
+        transform: scale(1.08);
+    }
+    .ts-colorpick input[type="radio"]:checked + label {
+        box-shadow: 0 0 0 2px var(--color-card), 0 0 0 4px var(--pc);
+    }
+    .ts-colorpick input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    /* ---- Aperçu en direct du projet ---- */
+    .ts-project-preview {
+        @apply flex items-center gap-3 p-3 rounded-md bg-paper-2 border border-rule;
+    }
+    .ts-project-preview-name {
+        @apply text-dark-font font-medium truncate;
+    }
+
+    /* ---- Sélecteur de membres (recherche + pastilles) ---- */
+    .ts-memberpick {
+        @apply flex flex-col gap-2.5;
+    }
+    .ts-memberpick-search {
+        @apply relative;
+    }
+    .ts-memberpick-search svg {
+        @apply absolute left-3 top-1/2 -translate-y-1/2 text-small-font pointer-events-none;
+    }
+    .ts-memberpick-input {
+        @apply pl-9;
+    }
+    .ts-memberpick-meta {
+        @apply text-[11.5px] text-small-font m-0;
+    }
+    .ts-memberpick-list {
+        @apply flex flex-wrap gap-2 max-h-60 overflow-y-auto p-0.5;
+    }
+    .ts-avatar.ts-avatar-sm {
+        @apply w-6 h-6 text-[9.5px];
+    }
+    .ts-memberpick-option {
+        @apply inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full cursor-pointer select-none;
+        @apply bg-card border border-rule text-small-font;
+        transition: background-color 150ms, color 150ms, border-color 150ms;
+    }
+    .ts-memberpick-option:hover {
+        @apply border-dark-font text-dark-font;
+    }
+    .ts-memberpick-option input[type="checkbox"] {
+        @apply sr-only;
+    }
+    .ts-memberpick-name {
+        @apply text-[12.5px] truncate max-w-44;
+    }
+    .ts-memberpick-tick {
+        @apply hidden items-center justify-center text-accent;
+    }
+    .ts-memberpick-option:has(input:checked) {
+        @apply text-dark-font font-medium;
+        background: var(--color-accent-soft);
+        border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    }
+    .ts-memberpick-option:has(input:checked) .ts-avatar-sm {
+        @apply bg-accent;
+    }
+    .ts-memberpick-option:has(input:checked) .ts-memberpick-tick {
+        @apply inline-flex;
+    }
+    .ts-memberpick-option:has(input:focus-visible) {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+}
