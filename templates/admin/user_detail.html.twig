@@ -18,7 +18,10 @@
                 <div class="flex items-center gap-4">
                     <span class="pf-avatar-lg">{{ user.initials }}</span>
                     <div class="flex flex-col gap-1">
-                        <h1 class="ts-hero-title m-0" style="font-size:clamp(36px,4vw,52px)">{{ user.fullName ?? user.email }}</h1>
+                        <h1 class="ts-hero-title m-0" style="font-size:clamp(36px,4vw,52px)">
+                            {{ user.fullName ?? user.email }}
+                            {% if user.isIndependent %}<span class="ts-row-badge ts-badge-self">Suivi perso</span>{% endif %}
+                        </h1>
                         <div class="text-small-font text-[13px]">
                             {% if user.jobTitle %}{{ user.jobTitle }} · {% endif %}
                             {% if user.contractType %}{{ user.contractType.label }} · {% endif %}
@@ -27,6 +30,18 @@
                         </div>
                     </div>
                 </div>
+                {% if not user.admin %}
+                    <form method="post"
+                          action="{{ path('app_admin_user_toggle_independent', {id: user.id}) }}"
+                          onsubmit="return confirm({{ (user.isIndependent
+                              ? 'Repasser ' ~ (user.fullName ?? user.email) ~ ' en suivi équipe ? Ses entrées en suivi perso repasseront en brouillon et devront être resoumises.'
+                              : 'Passer ' ~ (user.fullName ?? user.email) ~ ' en suivi personnel ? Ses heures ne seront plus soumises à validation.')|json_encode }});">
+                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('user_toggle_independent_' ~ user.id) }}">
+                        <button type="submit" class="ts-btn {{ user.isIndependent ? 'ts-btn-ghost' : 'ts-btn-primary' }}">
+                            {{ user.isIndependent ? 'Repasser en suivi équipe' : 'Passer en suivi personnel' }}
+                        </button>
+                    </form>
+                {% endif %}
             </div>
         </section>
 

@@ -139,10 +139,47 @@
         line-height: 1.55;
     }
 
+    /* ---- "Coming soon" block, set apart from the live features ---- */
+    .landing-soon {
+        @apply flex flex-col gap-6 pt-10 mt-2;
+        border-top: 1px solid var(--color-rule);
+    }
+    .landing-soon-head {
+        @apply flex flex-col gap-1.5;
+    }
+    .landing-soon-title {
+        @apply font-instrument text-2xl leading-none m-0;
+        letter-spacing: -0.01em;
+    }
+    .landing-features-soon {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    /* A live, shipped feature: active card language with a "Nouveau" badge */
+    .landing-feature.is-new {
+        @apply relative gap-2.5;
+    }
+    /* The Excel export is not here yet: soft fill, dashed rule, no hover lift */
+    .landing-feature.is-soon {
+        @apply relative gap-2.5 border-dashed bg-paper-2;
+        border-color: var(--color-rule);
+    }
+    .landing-feature.is-soon:hover {
+        @apply border-rule;
+    }
+    .landing-soon-badge {
+        @apply self-start inline-flex items-center rounded-full;
+        @apply text-[10px] tracking-[0.14em] uppercase font-medium;
+        @apply bg-accent-soft text-accent;
+        padding: 3px 9px;
+    }
+    /* Shipped-feature badge: solid accent, to stand apart from "Bientôt" */
+    .landing-soon-badge-new {
+        @apply bg-accent text-light-font;
+    }
+
     /* ---- Closing CTA band (dark, mirrors hero) ---- */
     .landing-cta-band {
-        @apply relative overflow-hidden max-w-5xl mx-auto flex flex-col gap-4 rounded-lg;
-        margin: 0 24px 24px;
+        @apply relative overflow-hidden max-w-5xl mx-auto my-6 flex flex-col gap-4 rounded-lg;
         padding: 56px 40px;
         background: var(--color-panel-dark);
         color: var(--color-light-font);

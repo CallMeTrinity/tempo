@@ -278,7 +278,7 @@
                             <div class="flex items-center justify-between gap-3 flex-wrap">
                                 <span class="ts-day-badge">{{ currentEntry.dayType.label }}</span>
                                 {% if currentEntry.status.value != 'draft' %}
-                                    <span class="ts-row-badge ts-badge-{{ currentEntry.status.value == 'approved' ? 'approved' : (currentEntry.status.value == 'submitted' ? 'submitted' : 'review') }}">{{ currentEntry.status.label }}</span>
+                                    <span class="ts-row-badge ts-badge-{{ currentEntry.status.value == 'approved' ? 'approved' : (currentEntry.status.value == 'submitted' ? 'submitted' : (currentEntry.status.value == 'self_tracked' ? 'self' : 'review')) }}">{{ currentEntry.status.label }}</span>
                                 {% endif %}
                             </div>
                             {% if currentEntry.note %}
@@ -351,7 +351,7 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                             </button>
                             {% if isEdit and currentEntry and currentEntry.status.value != 'draft' %}
-                                <span class="ts-row-badge ts-badge-{{ currentEntry.status.value == 'to_be_reviewed' ? 'review' : (currentEntry.status.value == 'submitted' ? 'submitted' : 'approved') }}">{{ currentEntry.status.label }}</span>
+                                <span class="ts-row-badge ts-badge-{{ currentEntry.status.value == 'to_be_reviewed' ? 'review' : (currentEntry.status.value == 'submitted' ? 'submitted' : (currentEntry.status.value == 'self_tracked' ? 'self' : 'approved')) }}">{{ currentEntry.status.label }}</span>
                             {% endif %}
                         </div>
                     {{ form_end(timeEntryForm, {render_rest: false}) }}
@@ -397,7 +397,7 @@
                                 <div class="ts-row-hours">{{ entry.hoursWorked|number_format(1, ',', ' ') }}h</div>
                                 <div>
                                     {% set s = entry.status.value %}
-                                    <span class="ts-row-badge ts-badge-{{ s == 'draft' ? 'draft' : (s == 'submitted' ? 'submitted' : (s == 'approved' ? 'approved' : 'review')) }}">
+                                    <span class="ts-row-badge ts-badge-{{ s == 'draft' ? 'draft' : (s == 'submitted' ? 'submitted' : (s == 'approved' ? 'approved' : (s == 'self_tracked' ? 'self' : 'review'))) }}">
                                         {{ entry.status.label }}
                                     </span>
                                 </div>

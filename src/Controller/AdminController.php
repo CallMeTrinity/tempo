@@ -361,6 +361,47 @@ class AdminController extends AbstractController
         return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_admin_registrations'));
     }
 
+    #[Route('/users/{id<\d+>}/toggle-independent', name: 'user_toggle_independent', methods: ['POST'])]
+    public function toggleIndependent(
+        User $user,
+        Request $request,
+        EntityManagerInterface $em,
+        TimeEntryRepository $entries,
+    ): Response {
+        if (!$this->isCsrfTokenValid('user_toggle_independent_' . $user->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF invalide.');
+        }
+        if ($user->isAdmin()) {
+            $this->addFlash('error', 'Le mode de suivi ne s\'applique pas à un compte admin.');
+
+            return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_admin_user_detail', ['id' => $user->getId()]));
+        }
+
+        $now = new DateTimeImmutable();
+        $becomingIndependent = !$user->isIndependent();
+
+        // Requalification des entrées en vol (les APPROVED restent verrouillées) :
+        //  - passage en indépendant : DRAFT/SUBMITTED/TO_BE_REVIEWED → SELF_TRACKED ;
+        //  - retour en mode équipe   : SELF_TRACKED → DRAFT (resoumission possible).
+        $fromStatuses = $becomingIndependent
+            ? [Status::DRAFT, Status::SUBMITTED, Status::TO_BE_REVIEWED]
+            : [Status::SELF_TRACKED];
+        $toStatus = $becomingIndependent ? Status::SELF_TRACKED : Status::DRAFT;
+
+        $em->wrapInTransaction(function () use ($user, $entries, $fromStatuses, $toStatus, $becomingIndependent, $now): void {
+            $user->setIsIndependent($becomingIndependent)->setUpdatedAt($now);
+            foreach ($entries->findByUserAndStatuses($user, $fromStatuses) as $entry) {
+                $entry->setStatus($toStatus)->setUpdatedAt($now);
+            }
+        });
+
+        $this->addFlash('success', $becomingIndependent
+            ? sprintf('%s passe en suivi personnel : ses heures ne nécessitent plus de validation.', $user->getFullName() ?? $user->getEmail())
+            : sprintf('%s repasse en suivi équipe : ses heures devront à nouveau être soumises pour validation.', $user->getFullName() ?? $user->getEmail()));
+
+        return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_admin_user_detail', ['id' => $user->getId()]));
+    }
+
     #[Route('/projects', name: 'projects', methods: ['GET'])]
     public function projects(ProjectRepository $projects, TimeEntryProjectRepository $allocations): Response
     {

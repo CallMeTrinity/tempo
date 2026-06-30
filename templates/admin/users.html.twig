@@ -42,6 +42,9 @@
                                         {% if not u.isVerified %}
                                             <span class="ts-row-badge ts-badge-review" title="Compte non validé">non vérifié</span>
                                         {% endif %}
+                                        {% if u.isIndependent %}
+                                            <span class="ts-row-badge ts-badge-self" title="Suivi personnel, sans validation">suivi perso</span>
+                                        {% endif %}
                                     </span>
                                     <span class="ts-table-user-meta">{{ u.jobTitle ?? '—' }}</span>
                                 </div>

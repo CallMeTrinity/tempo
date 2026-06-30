@@ -99,7 +99,7 @@ class PlanningController extends AbstractController
                 $entry = (new TimeEntry())
                     ->setUser($user)
                     ->setDate(clone $cursor)
-                    ->setStatus(Status::DRAFT)
+                    ->setStatus($user->isIndependent() ? Status::SELF_TRACKED : Status::DRAFT)
                     ->setDayType($type)
                     ->setNote($note)
                     ->setCreatedAt(new \DateTimeImmutable())

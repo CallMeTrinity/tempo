@@ -57,11 +57,11 @@
                     travaillées et les heures supplémentaires, et simplifie la validation par l'équipe d'encadrement.
                 </p>
                 <div class="landing-cta-row">
-                    <a href="{{ path('app_register') }}" class="btn-submit">
+                    <a href="{{ path('app_register') }}" class="btn-light">
                         <span>Commencer gratuitement</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
-                    <a href="{{ path('app_login') }}" class="link-q">J'ai déjà un compte</a>
+                    <a href="{{ path('app_login') }}" class="btn-ghost-on-dark">J'ai déjà un compte</a>
                 </div>
             </div>
         </header>
@@ -136,17 +136,36 @@
                     <p class="landing-feature-desc">Soumettez votre semaine pour validation, et laissez votre équipe d'encadrement approuver en lot.</p>
                 </article>
             </div>
+
+            <div class="landing-soon">
+                <div class="landing-soon-head">
+                    <p class="landing-eyebrow landing-eyebrow-dark">Nouveauté</p>
+                    <h3 class="landing-soon-title">Les dernières nouveautés de Tempo.</h3>
+                </div>
+                <div class="landing-features landing-features-soon">
+                    <article class="landing-feature is-new">
+                        <span class="landing-soon-badge landing-soon-badge-new">Nouveau</span>
+                        <h3 class="landing-feature-title">Suivi par projet</h3>
+                        <p class="landing-feature-desc">Répartissez vos heures sur vos projets et visualisez le temps passé par mission, pour vous comme pour l'équipe.</p>
+                    </article>
+                    <article class="landing-feature is-soon">
+                        <span class="landing-soon-badge">Bientôt</span>
+                        <h3 class="landing-feature-title">Export Excel</h3>
+                        <p class="landing-feature-desc">Exportez vos fiches horaires et vos heures par projet en un fichier Excel, prêt pour la paie ou la facturation.</p>
+                    </article>
+                </div>
+            </div>
         </section>
 
         <section class="landing-cta-band" aria-labelledby="landing-cta-title">
-            <h2 id="landing-cta-title" class="landing-h2">Prêt à arrêter les tableurs ?</h2>
+            <h2 id="landing-cta-title" class="landing-h2">Prêt à simplifier vos fiches horaires ?</h2>
             <p class="landing-cta-band-sub">Créez votre compte en moins d'une minute et saisissez votre première semaine dès aujourd'hui.</p>
             <div class="landing-cta-row">
-                <a href="{{ path('app_register') }}" class="btn-submit">
+                <a href="{{ path('app_register') }}" class="btn-light">
                     <span>Créer un compte gratuit</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </a>
-                <a href="{{ path('app_login') }}" class="link-q link-q-on-dark">J'ai déjà un compte</a>
+                <a href="{{ path('app_login') }}" class="btn-ghost-on-dark">J'ai déjà un compte</a>
             </div>
         </section>
 

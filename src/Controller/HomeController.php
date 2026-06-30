@@ -220,6 +220,11 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
+        if ($user->isIndependent()) {
+            $this->addFlash('error', 'En suivi personnel, vos heures n\'ont pas besoin d\'être soumises.');
+            return $this->redirectToRoute('app_home');
+        }
+
         if (!$this->isCsrfTokenValid('submit_week_' . $user->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('CSRF invalide.');
         }
@@ -298,7 +303,7 @@ class HomeController extends AbstractController
         $entry = (new TimeEntry())
             ->setUser($user)
             ->setDate($date)
-            ->setStatus(Status::DRAFT)
+            ->setStatus($user->isIndependent() ? Status::SELF_TRACKED : Status::DRAFT)
             ->setCreatedAt(new \DateTimeImmutable());
 
         $isoWd = (int) $date->format('N');

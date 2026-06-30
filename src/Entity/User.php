@@ -52,6 +52,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isVerified = false;
 
+    /**
+     * Utilisateur indépendant (auto-suivi) : ses heures ne passent plus par la
+     * validation admin, elles sont enregistrées directement en SELF_TRACKED.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isIndependent = false;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $firstName = null;
 
@@ -240,6 +247,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsVerified(bool $isVerified): static
     {
         $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function isIndependent(): bool
+    {
+        return $this->isIndependent;
+    }
+
+    public function setIsIndependent(bool $isIndependent): static
+    {
+        $this->isIndependent = $isIndependent;
 
         return $this;
     }

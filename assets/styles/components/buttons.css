@@ -24,6 +24,40 @@
         animation: btn-sweep 1.1s linear infinite;
     }
 
+    /* Primary CTA tuned for dark panels (hero, closing band) where the
+       default dark btn-submit would sit dark-on-dark. */
+    .btn-light {
+        @apply inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-md;
+        @apply bg-light-font text-dark-font text-sm font-medium tracking-wide;
+        @apply cursor-pointer transition-colors duration-150;
+        border: 0;
+    }
+    .btn-light:hover:not(:disabled) {
+        @apply bg-accent text-light-font;
+    }
+
+    /* Secondary, bordered CTA. Visible at rest and on hover, on light bg. */
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-md;
+        @apply bg-transparent text-dark-font text-sm font-medium tracking-wide;
+        @apply border border-rule cursor-pointer transition-colors duration-150;
+    }
+    .btn-ghost:hover {
+        @apply border-dark-font bg-paper-2;
+    }
+
+    /* Secondary CTA on dark panels. */
+    .btn-ghost-on-dark {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-md;
+        @apply bg-transparent text-light-font text-sm font-medium tracking-wide;
+        @apply cursor-pointer transition-colors duration-150;
+        border: 1px solid rgba(245, 243, 238, 0.28);
+    }
+    .btn-ghost-on-dark:hover {
+        border-color: var(--color-light-font);
+        background: rgba(245, 243, 238, 0.08);
+    }
+
     .btn-oauth {
         @apply inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-md;
         @apply bg-card text-dark-font text-[13px];

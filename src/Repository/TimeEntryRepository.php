@@ -106,6 +106,29 @@ class TimeEntryRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Entrées d'un utilisateur dont le statut figure dans la liste donnée.
+     * Utilisé pour requalifier les statuts lors du basculement du mode de suivi.
+     *
+     * @param Status[] $statuses
+     *
+     * @return TimeEntry[]
+     */
+    public function findByUserAndStatuses(User $user, array $statuses): array
+    {
+        if ($statuses === []) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.user = :user')
+            ->andWhere('t.status IN (:statuses)')
+            ->setParameter('user', $user)
+            ->setParameter('statuses', $statuses)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function countPendingApproval(): int
     {
         return (int) $this->createQueryBuilder('t')
