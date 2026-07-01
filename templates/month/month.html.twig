@@ -134,6 +134,14 @@
 
         {# ---------- Planning panel ---------- #}
         {% include 'components/planning_form.html.twig' with {planningForm: planningForm} only %}
+
+        {# ---------- Export panel ---------- #}
+        {% include 'components/export_form.html.twig' with {
+            defaultFrom: firstOfMonth|date('Y-m-01'),
+            defaultTo: firstOfMonth|date('Y-m-t'),
+            contractStart: app.user.contractStartDate ? app.user.contractStartDate|date('Y-m-d') : null,
+            today: 'now'|date('Y-m-d'),
+        } only %}
         </turbo-frame>
     </main>
 {% endblock %}

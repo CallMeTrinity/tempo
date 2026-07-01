@@ -26,6 +26,7 @@ Toutes ces routes sont interdites aux comptes `ROLE_ADMIN` (cf. `AdminRedirectLi
 | GET     | `/month/{year}/{month}`             | `app_month`                | Vue calendrier du mois.                                                 |
 | GET/POST| `/profile`                          | `app_profile`              | Édition du profil + statistiques globales.                              |
 | POST    | `/planning`                         | `app_planning_create`      | Crée/écrase des entrées sur une plage de dates (PTO/UTO/OFF/REMOTE).    |
+| GET     | `/export`                           | `app_export`               | Télécharge le pointage de l'utilisateur (CSV ou xlsx) sur une période.  |
 
 ### Paramètres usuels
 
@@ -48,6 +49,13 @@ Toutes ces routes sont interdites aux comptes `ROLE_ADMIN` (cf. `AdminRedirectLi
     - week-end (`isoWeekday > 5`) → ignoré
     - jour < `contractStartDate` → ignoré
     - sinon création (ou écrasement d'un PTO/UTO/OFF DRAFT existant)
+
+#### `app_export`
+
+- Query `format=xlsx|csv` (défaut `xlsx`), `from=YYYY-MM-DD`, `to=YYYY-MM-DD`.
+- Période par défaut : **mois courant**. Plage libre via `from`/`to` ; si `from > to`, les bornes sont remises dans l'ordre. Dates invalides → repli sur le mois courant.
+- Exporte les données de **l'utilisateur courant** uniquement. La réponse est un fichier (`Content-Disposition: attachment`) : le formulaire côté vue mois porte `data-turbo="false"` pour laisser le navigateur gérer le téléchargement.
+- Détail jour par jour (date, jour, type, horaires, pause, heures, projets du jour, statut, note) + ligne de total. En xlsx : détail regroupé par année (si > 1 an) puis par semaine (n° + total hebdo), lignes colorées par type de jour, et onglet « Projets » (cumul d'heures par projet, pastille couleur).
 
 ## Espace administration (`ROLE_ADMIN`)
 

@@ -31,6 +31,7 @@ final class AdminRedirectListener implements EventSubscriberInterface
         'app_time_entry_',
         'app_week_',
         'app_planning_',
+        'app_export',
     ];
 
     public function __construct(

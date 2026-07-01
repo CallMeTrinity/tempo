@@ -133,6 +133,58 @@ class TimeEntryProjectRepository extends ServiceEntityRepository
     }
 
     /**
+     * Cumul d'heures par projet pour un utilisateur, restreint à une période.
+     * Ne retient que les affectations portées par les entrées de l'utilisateur
+     * exporté : les projets renvoyés sont donc, par construction, les siens.
+     * Agrégation faite en base (une requête groupée) plutôt qu'en PHP.
+     *
+     * @return list<array{project: Project, hours: float, days: int}> trié par heures décroissantes
+     */
+    public function aggregateForUserBetween(User $user, \DateTimeInterface $from, \DateTimeInterface $to): array
+    {
+        $rows = $this->createQueryBuilder('tep')
+            ->select(
+                'IDENTITY(tep.project) AS projectId',
+                'SUM(tep.hours) AS hours',
+                'COUNT(DISTINCT te.date) AS days',
+            )
+            ->innerJoin('tep.timeEntry', 'te')
+            ->andWhere('te.user = :user')
+            ->andWhere('te.date BETWEEN :from AND :to')
+            ->setParameter('user', $user)
+            ->setParameter('from', $from->format('Y-m-d'))
+            ->setParameter('to', $to->format('Y-m-d'))
+            ->groupBy('tep.project')
+            ->orderBy('hours', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        if ($rows === []) {
+            return [];
+        }
+
+        $projectsById = [];
+        foreach ($this->getEntityManager()->getRepository(Project::class)
+            ->findBy(['id' => array_map(static fn (array $row): int => (int) $row['projectId'], $rows)]) as $project) {
+            $projectsById[$project->getId()] = $project;
+        }
+
+        $result = [];
+        foreach ($rows as $row) {
+            $project = $projectsById[(int) $row['projectId']] ?? null;
+            if ($project !== null) {
+                $result[] = [
+                    'project' => $project,
+                    'hours' => (float) $row['hours'],
+                    'days' => (int) $row['days'],
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Tous les utilisateurs ayant affecté des heures sur un projet donné,
      * avec leur cumul. Trié par heures décroissantes.
      *
