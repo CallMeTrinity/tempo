@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau mot de passe · Tempo{% endblock %}
+
+{% block body %}
+    <main class="auth-page">
+        {% include 'components/auth_panel.html.twig' with {
+            eyebrow: 'N° 03 — Récupération',
+            number: '02.0',
+            unit: 'étape',
+            lede: "Dernière étape. Choisissez un nouveau mot de passe et vous pourrez reprendre votre semaine en cours."
+        } only %}
+
+        <section class="form-side">
+            <header class="form-side-top">
+                <a href="{{ path('app_login') }}" class="back-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
+                    Connexion
+                </a>
+                <div class="lang">FR · <span class="text-small-font">EN</span></div>
+            </header>
+
+            <div class="form-wrap">
+                <div class="form-card">
+                    <div class="form-head">
+                        <div class="eyebrow">Réinitialisation</div>
+                        <h1 class="form-h1">Choisissez un nouveau mot de passe.</h1>
+                        <p class="form-sub">12 caractères minimum, avec une majuscule et un chiffre.</p>
+                    </div>
+
+                    {{ form_errors(resetForm) }}
+
+                    {{ form_start(resetForm, {attr: {class: 'flex flex-col gap-4'}}) }}
+                        <div class="divider"><span>nouveau mot de passe</span></div>
+
+                        {{ form_row(resetForm.plainPassword.first) }}
+                        {{ form_row(resetForm.plainPassword.second) }}
+
+                        <button type="submit" class="btn-submit">
+                            <span>Réinitialiser</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </button>
+                    {{ form_end(resetForm) }}
+                </div>
+            </div>
+
+            <footer class="form-side-foot">
+                <span>© 2026 Tempo</span>
+                <span class="dot">·</span>
+                <a href="#">Aide</a>
+                <span class="dot">·</span>
+                <a href="#">Confidentialité</a>
+            </footer>
+        </section>
+    </main>
+{% endblock %}
