@@ -1,0 +1,24 @@
+{# Pile de toasts globale. Conteneur en position: fixed → ne décale pas la page.
+   Tous les flash messages sont rendus ici, quel que soit leur type. #}
+{% set toastStyles = {
+    'success': 'toast-success',
+    'error': 'toast-error',
+    'verify_email_error': 'toast-error',
+    'reset_password_error': 'toast-error',
+    'warning': 'toast-warning',
+    'info': 'toast-info',
+} %}
+<div class="toast-stack" data-controller="toast" aria-live="polite" aria-atomic="true">
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="toast {{ toastStyles[type] ?? 'toast-info' }}"
+                 data-toast-target="toast"
+                 data-action="click->toast#onClick"
+                 role="status"
+                 hidden>
+                <span class="toast-msg">{{ message }}</span>
+                <span class="toast-close" aria-hidden="true">&times;</span>
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>

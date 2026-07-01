@@ -74,7 +74,9 @@
            page. Le flash est volontairement dans le frame pour rester visible
            après extraction par Turbo (sinon consommé en haut de page). #}
         <turbo-frame id="profile-form" style="display: contents;">
-            {% include 'components/flashes.html.twig' only %}
+        {# Toasts dans le frame : une navigation de frame ne réévalue que ce
+           contenu, le conteneur global de base.html.twig serait ignoré. #}
+        {% include 'components/toasts.html.twig' %}
 
             {{ form_start(userProfileForm, {attr: {class: 'flex flex-col gap-6'}}) }}
             {% if not userProfileForm.vars.valid %}
@@ -165,7 +167,7 @@
                     </div>
                     <div class="kv-row">
                         <span class="kv-k">Email vérifié</span>
-                        <span class="kv-v">{{ user.verified ? 'Oui' : 'Non' }}</span>
+                        <span class="kv-v">{{ user.emailVerified ? 'Oui' : 'Non' }}</span>
                     </div>
                 </div>
             </div>

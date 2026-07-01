@@ -82,7 +82,9 @@
            jour & semaine ; `display: contents` préserve la mise en page flex.
            Les flashes sont dans le frame pour rester visibles après extraction. #}
         <turbo-frame id="week-view" data-turbo-action="advance" style="display: contents;">
-            {% include 'components/flashes.html.twig' only %}
+        {# Toasts dans le frame : une navigation de frame ne réévalue que ce
+           contenu, le conteneur global de base.html.twig serait ignoré. #}
+        {% include 'components/toasts.html.twig' %}
 
         {# ---------- Hero ---------- #}
         <section class="ts-hero">

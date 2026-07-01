@@ -16,7 +16,9 @@
            page flex. Les liens de jour mènent vers la semaine (autre page) : ils
            portent data-turbo-frame="_top" pour sortir du frame. #}
         <turbo-frame id="month-view" data-turbo-action="advance" style="display: contents;">
-            {% include 'components/flashes.html.twig' only %}
+        {# Toasts dans le frame : une navigation de frame ne réévalue que ce
+           contenu, le conteneur global de base.html.twig serait ignoré. #}
+        {% include 'components/toasts.html.twig' %}
 
         {# ---------- Header ---------- #}
         <section class="ts-month-head">

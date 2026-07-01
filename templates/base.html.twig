@@ -59,6 +59,8 @@
     <body>
         {% block body %}{% endblock %}
 
+        {% include 'components/toasts.html.twig' %}
+
         {% if app.environment == 'prod' %}
         <script>
             if ('serviceWorker' in navigator) {
