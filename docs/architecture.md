@@ -87,6 +87,17 @@ Centralise la **logique de présentation et de calcul** :
 
 Les contrôleurs `HomeController`, `MonthController` et `AdminController` consomment ce service.
 
+### Export (`src/Export/`)
+
+Export du pointage en CSV ou Excel, découplé du format de sortie :
+
+- `TimeEntryExporter` construit une fois les données (`TimesheetExport` : lignes jour par jour `TimesheetRow` + récap `ProjectTotal`) à partir des repositories, puis délègue au writer du format demandé. La logique métier (colonnes, valeurs) vit ici ; seul le writer diffère.
+- `Writer\CsvExportWriter` : dump à plat, BOM UTF-8 + séparateur `;` (Excel FR), récap projets en pied de fichier.
+- `Writer\XlsxExportWriter` : rendu riche via PhpSpreadsheet — détail regroupé par **année** (si l'export couvre plus d'un an) puis par **semaine ISO** (bandeau n° de semaine + plage de dates, total hebdomadaire), lignes colorées par type de jour, et onglet « Projets » avec pastille de couleur et total par projet.
+- `ExportFormat` (enum) porte extension, MIME type et libellé de chaque format.
+
+Consommé par `ExportController` (route `app_export`).
+
 ### Forms (`src/Form/`)
 
 Tous désactivent `csrf_protection` au niveau du form (les pages sont déjà derrière `IsGranted`, et le contrôleur JS CSRF stateless de Symfony ne fait pas matcher les tokens côté serveur). La protection CSRF des actions destructrices (delete, unsubmit, approve…) est faite manuellement via `isCsrfTokenValid()` dans les contrôleurs.
@@ -100,7 +111,7 @@ Tous désactivent `csrf_protection` au niveau du form (les pages sont déjà der
 
 ### Event listeners (`src/EventListener/`)
 
-`AdminRedirectListener` (priorité 4, après le RouterListener et le FirewallListener) intercepte toute requête principale d'un utilisateur `ROLE_ADMIN` qui cible une route « utilisateur » (préfixes `app_home`, `app_month`, `app_profile`, `app_time_entry_`, `app_week_`, `app_planning_`) et le redirige vers `app_admin_index`.
+`AdminRedirectListener` (priorité 4, après le RouterListener et le FirewallListener) intercepte toute requête principale d'un utilisateur `ROLE_ADMIN` qui cible une route « utilisateur » (préfixes `app_home`, `app_month`, `app_profile`, `app_time_entry_`, `app_week_`, `app_planning_`, `app_export`) et le redirige vers `app_admin_index`.
 
 ### Sécurité (`config/packages/security.yaml`)
 
