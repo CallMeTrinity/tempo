@@ -9,6 +9,7 @@
 @import "./components/error.css";
 @import "./components/landing.css";
 @import "./components/project.css";
+@import "./components/toast.css";
 
 @theme {
     --color-panel-dark: #14130f;

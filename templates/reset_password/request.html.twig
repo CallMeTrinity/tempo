@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mot de passe oublié · Tempo{% endblock %}
+
+{% block body %}
+    <main class="auth-page">
+        {% include 'components/auth_panel.html.twig' with {
+            eyebrow: 'N° 03 — Récupération',
+            number: '00.0',
+            unit: 'heures',
+            lede: "Un mot de passe égaré, ça arrive. Indiquez votre adresse et on vous envoie un lien pour en choisir un nouveau."
+        } only %}
+
+        <section class="form-side">
+            <header class="form-side-top">
+                <a href="{{ path('app_login') }}" class="back-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
+                    Connexion
+                </a>
+                <div class="lang">FR · <span class="text-small-font">EN</span></div>
+            </header>
+
+            <div class="form-wrap">
+                <div class="form-card">
+                    <div class="form-head">
+                        <div class="eyebrow">Mot de passe oublié</div>
+                        <h1 class="form-h1">Réinitialisez votre mot de passe.</h1>
+                        <p class="form-sub">Saisissez l'adresse email liée à votre compte. Vous recevrez un lien de réinitialisation.</p>
+                    </div>
+
+                    {{ form_start(requestForm, {attr: {class: 'flex flex-col gap-4'}}) }}
+                        <div class="divider"><span>votre adresse e-mail</span></div>
+
+                        {{ form_row(requestForm.email, {
+                            label: 'Adresse e-mail',
+                            attr: {autocomplete: 'email'}
+                        }) }}
+
+                        <button type="submit" class="btn-submit">
+                            <span>Envoyer le lien</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </button>
+                    {{ form_end(requestForm) }}
+
+                    <div class="form-foot">
+                        Vous vous en souvenez ?
+                        <a href="{{ path('app_login') }}" class="link-swap">Se connecter</a>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="form-side-foot">
+                <span>© 2026 Tempo</span>
+                <span class="dot">·</span>
+                <a href="#">Aide</a>
+                <span class="dot">·</span>
+                <a href="#">Confidentialité</a>
+            </footer>
+        </section>
+    </main>
+{% endblock %}

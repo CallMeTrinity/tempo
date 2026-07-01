@@ -18,7 +18,9 @@ framework:
             messenger.bus.default: []
 
         routing:
-            Symfony\Component\Mailer\Messenger\SendEmailMessage: async
+            # Les emails (vérification, reset) sont envoyés en synchrone, dans la
+            # requête : pas besoin de worker messenger:consume en prod. À rerouter
+            # vers "async" + worker dédié si le volume l'exige un jour.
             Symfony\Component\Notifier\Message\ChatMessage: async
             Symfony\Component\Notifier\Message\SmsMessage: async
 

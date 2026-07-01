@@ -53,6 +53,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $isVerified = false;
 
     /**
+     * Vérification de l'adresse email (clic sur le lien reçu par mail).
+     * À distinguer de $isVerified, qui représente la validation par un admin.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isEmailVerified = false;
+
+    /**
+     * Dernier envoi d'un email de confirmation. Sert à imposer un délai (5 min)
+     * avant de pouvoir en redemander un.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastVerificationEmailSentAt = null;
+
+    /**
      * Utilisateur indépendant (auto-suivi) : ses heures ne passent plus par la
      * validation admin, elles sont enregistrées directement en SELF_TRACKED.
      */
@@ -249,6 +263,50 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isVerified = $isVerified;
 
         return $this;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->isEmailVerified;
+    }
+
+    public function setIsEmailVerified(bool $isEmailVerified): static
+    {
+        $this->isEmailVerified = $isEmailVerified;
+
+        return $this;
+    }
+
+    /**
+     * Délai imposé entre deux envois d'email de confirmation.
+     */
+    public const VERIFICATION_EMAIL_COOLDOWN = 300;
+
+    public function getLastVerificationEmailSentAt(): ?\DateTimeImmutable
+    {
+        return $this->lastVerificationEmailSentAt;
+    }
+
+    public function setLastVerificationEmailSentAt(?\DateTimeImmutable $lastVerificationEmailSentAt): static
+    {
+        $this->lastVerificationEmailSentAt = $lastVerificationEmailSentAt;
+
+        return $this;
+    }
+
+    /**
+     * Nombre de secondes restant avant de pouvoir renvoyer un email de
+     * confirmation (0 si le délai est écoulé ou si aucun email n'a été envoyé).
+     */
+    public function getVerificationEmailCooldownRemaining(): int
+    {
+        if (null === $this->lastVerificationEmailSentAt) {
+            return 0;
+        }
+
+        $elapsed = time() - $this->lastVerificationEmailSentAt->getTimestamp();
+
+        return max(0, self::VERIFICATION_EMAIL_COOLDOWN - $elapsed);
     }
 
     public function isIndependent(): bool

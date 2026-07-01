@@ -35,6 +35,11 @@ class EmailVerifier
         $email->context($context);
 
         $this->mailer->send($email);
+
+        // Horodate l'envoi pour appliquer le délai anti-spam côté resend.
+        $user->setLastVerificationEmailSentAt(new \DateTimeImmutable());
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
     }
 
     /**
@@ -44,7 +49,7 @@ class EmailVerifier
     {
         $this->verifyEmailHelper->validateEmailConfirmationFromRequest($request, (string) $user->getId(), (string) $user->getEmail());
 
-        $user->setIsVerified(true);
+        $user->setIsEmailVerified(true);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();

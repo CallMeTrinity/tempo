@@ -42,3 +42,25 @@
         <a href="{{ logout_path() }}" class="link-q">Se déconnecter</a>
     </div>
 </header>
+
+{% if app.user and not isAdmin and not app.user.isEmailVerified %}
+    {% set cooldown = app.user.verificationEmailCooldownRemaining %}
+    <div class="ts-verify-banner" role="status"
+         style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:center;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:10px 16px;margin:0 0 16px;font-size:13px;">
+        <span>Confirmez votre adresse email pour sécuriser votre compte. Vérifiez votre boîte mail.</span>
+        <form method="post" action="{{ path('app_verify_resend') }}" class="inline"
+              data-controller="cooldown" data-cooldown-remaining-value="{{ cooldown }}">
+            <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('resend_verify_email') }}">
+            <button type="submit" class="link-q" style="font-weight:600;"
+                    data-cooldown-target="button" {{ cooldown > 0 ? 'disabled' : '' }}>
+                <span data-cooldown-target="label">
+                    {%- if cooldown > 0 -%}
+                        Mail envoyé · renvoyer dans {{ (cooldown // 60) ~ ':' ~ ('%02d'|format(cooldown % 60)) }}
+                    {%- else -%}
+                        Renvoyer l'email
+                    {%- endif -%}
+                </span>
+            </button>
+        </form>
+    </div>
+{% endif %}
