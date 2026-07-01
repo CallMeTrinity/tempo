@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
+#[IsGranted('IS_AUTHENTICATED_REMEMBERED')]
 class MonthController extends AbstractController
 {
     #[Route('/month', name: 'app_month_current', methods: ['GET'])]
