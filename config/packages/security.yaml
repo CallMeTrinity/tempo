@@ -8,7 +8,7 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
-                property: username
+                property: email
         users_in_memory: { memory: null }
 
     firewalls:
@@ -33,6 +33,8 @@ security:
                 lifetime: 2592000 # 30 jours (en secondes)
                 # La case "_remember_me" du formulaire de connexion doit être cochée.
                 # Passer always_remember_me à true pour maintenir la session sans case.
+                token_provider:
+                    doctrine: true
                 always_remember_me: false
 
             # Activate different ways to authenticate:
@@ -48,6 +50,7 @@ security:
         - { path: ^/sitemap\.xml$, roles: PUBLIC_ACCESS }
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path : ^/, roles: [ 'ROLE_USER', 'ROLE_ADMIN'] }
 

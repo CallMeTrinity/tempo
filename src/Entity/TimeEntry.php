@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Enum\DayType;
 use App\Enum\Status;
 use App\Repository\TimeEntryRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -51,6 +53,18 @@ class TimeEntry
 
     #[ORM\Column(enumType: DayType::class)]
     private DayType $dayType = DayType::WORKED;
+
+    /**
+     * @var Collection<int, TimeEntryProject>
+     */
+    #[ORM\OneToMany(targetEntity: TimeEntryProject::class, mappedBy: 'timeEntry', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Assert\Valid]
+    private Collection $projectAllocations;
+
+    public function __construct()
+    {
+        $this->projectAllocations = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -224,6 +238,97 @@ class TimeEntry
         if ($this->startTime !== null && $this->endTime !== null && $this->endTime <= $this->startTime) {
             $context->buildViolation('L’heure de fin doit être postérieure à l’heure de début.')
                 ->atPath('endTime')
+                ->addViolation();
+        }
+    }
+
+    /**
+     * @return Collection<int, TimeEntryProject>
+     */
+    public function getProjectAllocations(): Collection
+    {
+        return $this->projectAllocations;
+    }
+
+    public function addProjectAllocation(TimeEntryProject $projectAllocation): static
+    {
+        if (!$this->projectAllocations->contains($projectAllocation)) {
+            $this->projectAllocations->add($projectAllocation);
+            $projectAllocation->setTimeEntry($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProjectAllocation(TimeEntryProject $projectAllocation): static
+    {
+        if ($this->projectAllocations->removeElement($projectAllocation)) {
+            // set the owning side to null (unless already changed)
+            if ($projectAllocation->getTimeEntry() === $this) {
+                $projectAllocation->setTimeEntry(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getAllocatedHours(): float
+    {
+        return $this->projectAllocations->reduce(
+            function (float $total, TimeEntryProject $projectAllocation) {
+                return $total + $projectAllocation->getHours();
+            },
+            0.0
+        );
+    }
+
+    /**
+     * Cohérence des affectations projet :
+     * - un jour sans heures travaillées ne peut rien affecter ;
+     * - un même projet ne peut apparaître qu'une fois ;
+     * - la somme affectée ne peut dépasser les heures de la journée.
+     */
+    #[Assert\Callback]
+    public function validateProjectAllocations(ExecutionContextInterface $context): void
+    {
+        if ($this->projectAllocations->isEmpty()) {
+            return;
+        }
+
+        $hoursWorked = $this->getHoursWorked();
+        if ($hoursWorked <= 0) {
+            $context->buildViolation('Aucune heure travaillée ce jour : impossible d’affecter des projets.')
+                ->atPath('projectAllocations')
+                ->addViolation();
+
+            return;
+        }
+
+        $seen = [];
+        foreach ($this->projectAllocations as $allocation) {
+            $project = $allocation->getProject();
+            if ($project === null) {
+                continue;
+            }
+            $key = (string) $project->getId();
+            if (isset($seen[$key])) {
+                $context->buildViolation('Un même projet ne peut être affecté qu’une fois par jour.')
+                    ->atPath('projectAllocations')
+                    ->addViolation();
+
+                return;
+            }
+            $seen[$key] = true;
+        }
+
+        $allocated = $this->getAllocatedHours();
+        if ($allocated > $hoursWorked) {
+            $context->buildViolation(sprintf(
+                'Le total affecté aux projets (%s h) dépasse les heures de la journée (%s h).',
+                rtrim(rtrim(number_format($allocated, 1, ',', ' '), '0'), ','),
+                rtrim(rtrim(number_format($hoursWorked, 1, ',', ' '), '0'), ','),
+            ))
+                ->atPath('projectAllocations')
                 ->addViolation();
         }
     }

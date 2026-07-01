@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
+#[IsGranted('IS_AUTHENTICATED_REMEMBERED')]
 class HomeController extends AbstractController
 {
     /**
@@ -75,7 +75,7 @@ class HomeController extends AbstractController
         );
         $showForm = !$isReadOnly && !$isPlannedNonWork;
 
-        $form = $this->createForm(TimeEntryType::class, $timeEntry);
+        $form = $this->createForm(TimeEntryType::class, $timeEntry, ['user' => $user]);
         $form->get('isRemote')->setData($timeEntry->getDayType() === DayType::REMOTE);
         $form->handleRequest($request);
 
@@ -126,7 +126,7 @@ class HomeController extends AbstractController
             'action' => $this->generateUrl('app_planning_create'),
         ]);
 
-        return $this->render('home/home.html.twig', [
+        $response = $this->render('home/home.html.twig', [
             'timeEntryForm' => $form,
             'planningForm' => $planningForm,
             'isEdit' => $isEdit,
@@ -149,6 +149,14 @@ class HomeController extends AbstractController
             'weekIso' => $weekStart->format('o-\WW'),
             'weekSubmittableCount' => $weekSubmittableCount,
         ]);
+
+        // Saisie soumise mais invalide : statut 422 pour que Turbo réaffiche le
+        // frame avec les erreurs (un 200 serait interprété comme un succès).
+        if ($showForm && $form->isSubmitted()) {
+            $response->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return $response;
     }
 
     #[Route('/time-entry/{id}/delete', name: 'app_time_entry_delete', methods: ['POST'])]
@@ -209,6 +217,11 @@ class HomeController extends AbstractController
 
         if ($user->isAdmin()) {
             $this->addFlash('error', 'Un admin ne soumet pas ses heures.');
+            return $this->redirectToRoute('app_home');
+        }
+
+        if ($user->isIndependent()) {
+            $this->addFlash('error', 'En suivi personnel, vos heures n\'ont pas besoin d\'être soumises.');
             return $this->redirectToRoute('app_home');
         }
 
@@ -290,7 +303,7 @@ class HomeController extends AbstractController
         $entry = (new TimeEntry())
             ->setUser($user)
             ->setDate($date)
-            ->setStatus(Status::DRAFT)
+            ->setStatus($user->isIndependent() ? Status::SELF_TRACKED : Status::DRAFT)
             ->setCreatedAt(new \DateTimeImmutable());
 
         $isoWd = (int) $date->format('N');

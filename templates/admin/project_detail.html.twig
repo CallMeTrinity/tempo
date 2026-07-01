@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin · {{ project.name }} · Tempo{% endblock %}
+
+{% block body %}
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'admin'} only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">
+                <a href="{{ path('app_admin_projects') }}" class="link-q">← Projets</a>
+                · Détail projet
+            </div>
+            <div class="ts-hero-row">
+                <div class="flex items-center gap-4">
+                    {% include 'admin/_project_color.html.twig' with {color: project.color, icon: project.icon, size: 52} only %}
+                    <div class="flex flex-col gap-1">
+                        <h1 class="ts-hero-title m-0" style="font-size:clamp(36px,4vw,52px)">{{ project.name }}</h1>
+                        <div class="text-small-font text-[13px]">
+                            {% if project.description %}{{ project.description }} · {% endif %}
+                            {% if project.isActive %}Actif{% else %}Inactif{% endif %}
+                            · {{ project.members|length }} membre{{ project.members|length > 1 ? 's' : '' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% include 'admin/_subnav.html.twig' with {active: 'projects', pendingCount: pendingCount, unverifiedCount: unverifiedCount} only %}
+
+        <section class="ts-month-stats">
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Heures totales</span>
+                <span class="ts-month-stat-v">{{ totalHours|number_format(totalHours == totalHours|round ? 0 : 1, ',', ' ') }}h</span>
+                <span class="ts-month-stat-sub">tous membres confondus</span>
+            </div>
+            <div class="ts-month-stat">
+                <span class="ts-month-stat-k">Contributeurs</span>
+                <span class="ts-month-stat-v">{{ memberHours|length }}</span>
+                <span class="ts-month-stat-sub">personnes ayant saisi des heures</span>
+            </div>
+        </section>
+
+        <section class="ts-card">
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                    <div class="ts-card-eyebrow">Répartition des heures</div>
+                    <h2 class="ts-card-title">Contributeurs</h2>
+                    <p class="ts-card-sub">Cumul d'heures affectées à ce projet par chaque membre.</p>
+                </div>
+                <a href="{{ path('app_admin_project_edit', {id: project.id}) }}" class="link-q">Éditer le projet →</a>
+            </div>
+
+            {% if memberHours is empty %}
+                <div class="ts-empty">Aucune heure saisie sur ce projet pour l'instant.</div>
+            {% else %}
+                <div class="ts-scroll-x">
+                    <div class="ts-table ts-table-project-members">
+                        <div class="ts-table-head">
+                            <div>Membre</div>
+                            <div class="ts-table-num">Heures</div>
+                        </div>
+                        {% for row in memberHours %}
+                            <div class="ts-table-row">
+                                <div class="ts-table-user">
+                                    <span class="ts-avatar">{{ row.user.initials }}</span>
+                                    <div class="flex flex-col min-w-0">
+                                        <a class="ts-table-user-name link-q" href="{{ path('app_admin_user_detail', {id: row.user.id}) }}">
+                                            {{ row.user.fullName ?? row.user.email }}
+                                        </a>
+                                        {% if row.user.jobTitle %}
+                                            <span class="ts-table-user-meta">{{ row.user.jobTitle }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="ts-project-hours num">
+                                    {{ row.hours|number_format(row.hours == row.hours|round ? 0 : 1, ',', ' ') }}h
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

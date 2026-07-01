@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+{% form_theme form _self %}
+
+{# Rendu personnalisé des deux sélecteurs visuels (icône / couleur). Mêmes blocs
+   que le formulaire admin, sans le champ « membres » : un projet personnel n'en
+   a pas. Les partials d'icône/couleur sont partagés avec l'admin (DRY). #}
+{% block _project_icon_widget %}
+    <div class="ts-iconpick">
+        {% for choice in form %}
+            {{ form_widget(choice) }}
+            <label for="{{ choice.vars.id }}" title="{{ choice.vars.label }}">
+                {% include 'admin/_project_icon.html.twig' with {icon: choice.vars.value, size: 20} only %}
+            </label>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block _project_color_widget %}
+    {% set colors = constant('App\\Project\\ProjectColors::COLORS') %}
+    <div class="ts-colorpick">
+        {% for choice in form %}
+            {{ form_widget(choice) }}
+            <label for="{{ choice.vars.id }}"
+                   title="{{ choice.vars.label }}"
+                   style="--pc: {{ (colors[choice.vars.value] ?? colors['blue']).hex }};"></label>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block title %}Profil · {{ mode == 'new' ? 'Nouveau projet' : 'Éditer le projet' }} · Tempo{% endblock %}
+
+{% block body %}
+    <main class="ts-shell">
+        {% include 'components/topbar.html.twig' with {active: 'profile'} only %}
+
+        <section class="ts-hero">
+            <div class="ts-hero-eyebrow">Profil · Projets</div>
+            <h1 class="ts-hero-title">
+                <span>{{ mode == 'new' ? 'Nouveau projet' : 'Éditer ' ~ project.name }}</span>
+            </h1>
+        </section>
+
+        {{ form_start(form, {attr: {class: 'flex flex-col gap-6'}}) }}
+            {% if not form.vars.valid %}
+                <div class="flash flash-error">{{ form_errors(form) }}</div>
+            {% endif %}
+
+            <section class="ts-card">
+                <div>
+                    <div class="ts-card-eyebrow">Informations</div>
+                    <h2 class="ts-card-title">Identité du projet</h2>
+                    <p class="ts-card-sub">Nom, description et apparence. Visible uniquement par vous.</p>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    {{ form_row(form.name) }}
+                    {{ form_row(form.description) }}
+
+                    {# ---- Aperçu en direct ---- #}
+                    <div class="field">
+                        <span class="lbl">Aperçu</span>
+                        <div class="ts-project-preview">
+                            {% include 'admin/_project_color.html.twig' with {
+                                color: project.color,
+                                icon: project.icon,
+                                size: 32,
+                            } only %}
+                            <span class="ts-project-preview-name" data-project-preview-name>
+                                {{ project.name ?: 'Nom du projet' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{ form_row(form.icon) }}
+                    {{ form_row(form.color) }}
+                    {{ form_row(form.isActive) }}
+                </div>
+            </section>
+
+            <div class="flex items-center gap-3">
+                <button type="submit" class="btn-submit">
+                    <span>{{ mode == 'new' ? 'Créer le projet' : 'Enregistrer' }}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
+                <a href="{{ path('app_profile_projects') }}" class="link-q">Annuler</a>
+            </div>
+        {{ form_end(form) }}
+    </main>
+
+    <script>
+        (() => {
+            const badge = document.querySelector('.ts-project-preview .ts-project-badge');
+            const nameOut = document.querySelector('[data-project-preview-name]');
+            const nameIn = document.getElementById('{{ form.name.vars.id }}');
+            const iconInputs = document.querySelectorAll('.ts-iconpick input[type="radio"]');
+            const colorInputs = document.querySelectorAll('.ts-colorpick input[type="radio"]');
+
+            if (nameIn && nameOut) {
+                nameIn.addEventListener('input', () => {
+                    nameOut.textContent = nameIn.value.trim() || 'Nom du projet';
+                });
+            }
+
+            iconInputs.forEach((input) => input.addEventListener('change', () => {
+                if (!badge || !input.checked) return;
+                const svg = input.nextElementSibling?.querySelector('svg');
+                if (svg) badge.innerHTML = svg.outerHTML;
+            }));
+
+            colorInputs.forEach((input) => input.addEventListener('change', () => {
+                if (!badge || !input.checked) return;
+                badge.style.setProperty('--pc', input.dataset.hex);
+            }));
+        })();
+    </script>
+{% endblock %}

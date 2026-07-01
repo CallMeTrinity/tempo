@@ -176,6 +176,7 @@
     .ts-badge-submitted { @apply bg-accent-soft text-accent border border-accent/30; }
     .ts-badge-approved  { @apply bg-accent text-light-font; }
     .ts-badge-review    { color: #b46e1c; background: #fcf1dc; border: 1px solid #e8c98a; }
+    .ts-badge-self      { color: #1c6e6a; background: #dcf2f0; border: 1px solid #8acac4; }
 
     .ts-row-actions {
         @apply flex justify-end;
@@ -195,7 +196,8 @@
         @apply text-center py-10 text-small-font text-[13px];
     }
 
-    /* ---- Flash messages ---- */
+    /* ---- Alertes inline (erreurs de formulaire) ---- */
+    /* À distinguer des flash messages transitoires, désormais rendus en toasts. */
     .flash {
         @apply text-[13px] px-3 py-2.5 rounded-md;
     }

@@ -1,0 +1,30 @@
+{# Ligne d'un projet d'équipe (lecture seule) sur la page profil/projets.
+   Affiche les heures de l'utilisateur courant et le cumul de l'équipe.
+   Params :
+     - project : entité Project (scope TEAM)
+     - mine    : heures affectées par l'utilisateur courant (défaut 0)
+     - total   : cumul des heures de tous les membres (défaut 0) #}
+<div class="ts-table-row">
+    <div class="ts-table-user">
+        {% include 'admin/_project_color.html.twig' with {color: project.color, icon: project.icon, size: 32} only %}
+        <div class="flex flex-col min-w-0">
+            <span class="ts-table-user-name">{{ project.name }}</span>
+            {% if project.description %}
+                <span class="ts-table-user-meta">{{ project.description }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ts-project-hours num" title="Vos heures sur ce projet">
+        {{ (mine|default(0))|number_format((mine|default(0)) == (mine|default(0))|round ? 0 : 1, ',', ' ') }}h
+    </div>
+    <div class="ts-project-hours num" title="Cumul de l'équipe">
+        {{ (total|default(0))|number_format((total|default(0)) == (total|default(0))|round ? 0 : 1, ',', ' ') }}h
+    </div>
+    <div>
+        {% if project.isActive %}
+            <span class="ts-row-badge ts-badge-approved">Actif</span>
+        {% else %}
+            <span class="ts-row-badge ts-badge-draft">Inactif</span>
+        {% endif %}
+    </div>
+</div>

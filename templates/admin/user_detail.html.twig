@@ -7,7 +7,6 @@
 
     <main class="ts-shell">
         {% include 'components/topbar.html.twig' with {active: 'admin'} only %}
-        {% include 'components/flashes.html.twig' only %}
 
         <section class="ts-hero">
             <div class="ts-hero-eyebrow">
@@ -18,7 +17,10 @@
                 <div class="flex items-center gap-4">
                     <span class="pf-avatar-lg">{{ user.initials }}</span>
                     <div class="flex flex-col gap-1">
-                        <h1 class="ts-hero-title m-0" style="font-size:clamp(36px,4vw,52px)">{{ user.fullName ?? user.email }}</h1>
+                        <h1 class="ts-hero-title m-0" style="font-size:clamp(36px,4vw,52px)">
+                            {{ user.fullName ?? user.email }}
+                            {% if user.isIndependent %}<span class="ts-row-badge ts-badge-self">Suivi perso</span>{% endif %}
+                        </h1>
                         <div class="text-small-font text-[13px]">
                             {% if user.jobTitle %}{{ user.jobTitle }} · {% endif %}
                             {% if user.contractType %}{{ user.contractType.label }} · {% endif %}
@@ -27,6 +29,18 @@
                         </div>
                     </div>
                 </div>
+                {% if not user.admin %}
+                    <form method="post"
+                          action="{{ path('app_admin_user_toggle_independent', {id: user.id}) }}"
+                          onsubmit="return confirm({{ (user.isIndependent
+                              ? 'Repasser ' ~ (user.fullName ?? user.email) ~ ' en suivi équipe ? Ses entrées en suivi perso repasseront en brouillon et devront être resoumises.'
+                              : 'Passer ' ~ (user.fullName ?? user.email) ~ ' en suivi personnel ? Ses heures ne seront plus soumises à validation.')|json_encode }});">
+                        <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('user_toggle_independent_' ~ user.id) }}">
+                        <button type="submit" class="ts-btn {{ user.isIndependent ? 'ts-btn-ghost' : 'ts-btn-primary' }}">
+                            {{ user.isIndependent ? 'Repasser en suivi équipe' : 'Passer en suivi personnel' }}
+                        </button>
+                    </form>
+                {% endif %}
             </div>
         </section>
 
@@ -67,6 +81,51 @@
                 <span class="ts-month-stat-v">{{ stats.deficitHours|number_format(1, ',', ' ') }}h</span>
                 <span class="ts-month-stat-sub">à rattraper</span>
             </div>
+        </section>
+
+        <section class="ts-card">
+            <div>
+                <div class="ts-card-eyebrow">Tous projets confondus</div>
+                <h2 class="ts-card-title">Projets</h2>
+                <p class="ts-card-sub">Cumul d'heures affectées par {{ user.fullName ?? user.email }}, personnels comme d'équipe.</p>
+            </div>
+
+            {% if projectHours is empty %}
+                <div class="ts-empty">Aucune heure affectée à un projet.</div>
+            {% else %}
+                <div class="ts-scroll-x">
+                    <div class="ts-table ts-table-user-projects">
+                        <div class="ts-table-head">
+                            <div>Projet</div>
+                            <div class="ts-table-num">Heures</div>
+                            <div>Type</div>
+                        </div>
+                        {% for row in projectHours %}
+                            <div class="ts-table-row">
+                                <div class="ts-table-user">
+                                    {% include 'admin/_project_color.html.twig' with {color: row.project.color, icon: row.project.icon, size: 32} only %}
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="ts-table-user-name">{{ row.project.name }}</span>
+                                        {% if row.project.description %}
+                                            <span class="ts-table-user-meta">{{ row.project.description }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="ts-project-hours num" title="Heures affectées par ce membre">
+                                    {{ row.hours|number_format(row.hours == row.hours|round ? 0 : 1, ',', ' ') }}h
+                                </div>
+                                <div>
+                                    {% if row.project.scope.value == 'team' %}
+                                        <span class="ts-row-badge ts-badge-submitted">Équipe</span>
+                                    {% else %}
+                                        <span class="ts-row-badge ts-badge-draft">Personnel</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         </section>
 
         <section class="ts-card">

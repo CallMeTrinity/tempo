@@ -25,7 +25,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $username = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
@@ -51,6 +51,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     private bool $isVerified = false;
+
+    /**
+     * Vérification de l'adresse email (clic sur le lien reçu par mail).
+     * À distinguer de $isVerified, qui représente la validation par un admin.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isEmailVerified = false;
+
+    /**
+     * Dernier envoi d'un email de confirmation. Sert à imposer un délai (5 min)
+     * avant de pouvoir en redemander un.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastVerificationEmailSentAt = null;
+
+    /**
+     * Utilisateur indépendant (auto-suivi) : ses heures ne passent plus par la
+     * validation admin, elles sont enregistrées directement en SELF_TRACKED.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isIndependent = false;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $firstName = null;
@@ -79,9 +100,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => 60])]
     private int $defaultBreakMinutes = 60;
 
+    /**
+     * @var Collection<int, Project>
+     */
+    #[ORM\OneToMany(targetEntity: Project::class, mappedBy: 'owner')]
+    private Collection $projects_owned;
+
+    /**
+     * @var Collection<int, Project>
+     */
+    #[ORM\ManyToMany(targetEntity: Project::class, mappedBy: 'members')]
+    private Collection $projects_member;
+
     public function __construct()
     {
         $this->timeEntries = new ArrayCollection();
+        $this->projects_owned = new ArrayCollection();
+        $this->projects_member = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -226,6 +261,62 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsVerified(bool $isVerified): static
     {
         $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->isEmailVerified;
+    }
+
+    public function setIsEmailVerified(bool $isEmailVerified): static
+    {
+        $this->isEmailVerified = $isEmailVerified;
+
+        return $this;
+    }
+
+    /**
+     * Délai imposé entre deux envois d'email de confirmation.
+     */
+    public const VERIFICATION_EMAIL_COOLDOWN = 300;
+
+    public function getLastVerificationEmailSentAt(): ?\DateTimeImmutable
+    {
+        return $this->lastVerificationEmailSentAt;
+    }
+
+    public function setLastVerificationEmailSentAt(?\DateTimeImmutable $lastVerificationEmailSentAt): static
+    {
+        $this->lastVerificationEmailSentAt = $lastVerificationEmailSentAt;
+
+        return $this;
+    }
+
+    /**
+     * Nombre de secondes restant avant de pouvoir renvoyer un email de
+     * confirmation (0 si le délai est écoulé ou si aucun email n'a été envoyé).
+     */
+    public function getVerificationEmailCooldownRemaining(): int
+    {
+        if (null === $this->lastVerificationEmailSentAt) {
+            return 0;
+        }
+
+        $elapsed = time() - $this->lastVerificationEmailSentAt->getTimestamp();
+
+        return max(0, self::VERIFICATION_EMAIL_COOLDOWN - $elapsed);
+    }
+
+    public function isIndependent(): bool
+    {
+        return $this->isIndependent;
+    }
+
+    public function setIsIndependent(bool $isIndependent): static
+    {
+        $this->isIndependent = $isIndependent;
 
         return $this;
     }
@@ -392,6 +483,63 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDefaultBreakMinutes(int $defaultBreakMinutes): static
     {
         $this->defaultBreakMinutes = max(0, $defaultBreakMinutes);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function getProjectsOwned(): Collection
+    {
+        return $this->projects_owned;
+    }
+
+    public function addProject(Project $project): static
+    {
+        if (!$this->projects_owned->contains($project)) {
+            $this->projects_owned->add($project);
+            $project->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProject(Project $project): static
+    {
+        if ($this->projects_owned->removeElement($project)) {
+            // set the owning side to null (unless already changed)
+            if ($project->getOwner() === $this) {
+                $project->setOwner(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function getProjectsMember(): Collection
+    {
+        return $this->projects_member;
+    }
+
+    public function addProjectsMember(Project $projectsMember): static
+    {
+        if (!$this->projects_member->contains($projectsMember)) {
+            $this->projects_member->add($projectsMember);
+            $projectsMember->addMember($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProjectsMember(Project $projectsMember): static
+    {
+        if ($this->projects_member->removeElement($projectsMember)) {
+            $projectsMember->removeMember($this);
+        }
 
         return $this;
     }

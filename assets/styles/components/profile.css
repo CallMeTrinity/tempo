@@ -1,4 +1,21 @@
 @layer components {
+    /* ---- Liste des projets personnels (récap heures) ---- */
+    .pf-project-list {
+        @apply flex flex-col gap-1 m-0 mt-4 p-0 list-none;
+    }
+    .pf-project-item {
+        @apply flex items-center gap-3 py-2 border-b border-rule;
+    }
+    .pf-project-item:last-child {
+        @apply border-b-0;
+    }
+    .pf-project-name {
+        @apply text-dark-font text-[14px] truncate;
+    }
+    .pf-project-hours {
+        @apply ml-auto text-dark-font text-[14px] font-medium;
+    }
+
     /* ---- Profile hero ---- */
     .pf-hero {
         @apply flex items-center gap-6 flex-wrap;

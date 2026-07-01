@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
+#[IsGranted('IS_AUTHENTICATED_REMEMBERED')]
 class PlanningController extends AbstractController
 {
     #[Route('/planning', name: 'app_planning_create', methods: ['POST'])]
@@ -99,7 +99,7 @@ class PlanningController extends AbstractController
                 $entry = (new TimeEntry())
                     ->setUser($user)
                     ->setDate(clone $cursor)
-                    ->setStatus(Status::DRAFT)
+                    ->setStatus($user->isIndependent() ? Status::SELF_TRACKED : Status::DRAFT)
                     ->setDayType($type)
                     ->setNote($note)
                     ->setCreatedAt(new \DateTimeImmutable())

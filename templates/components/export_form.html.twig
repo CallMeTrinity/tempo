@@ -1,0 +1,51 @@
+{# Carte d'export des données de pointage.
+   Formulaire GET vers app_export : période libre (from/to) + format.
+   data-turbo="false" : la réponse est un fichier (téléchargement), pas une
+   navigation Turbo — on laisse le navigateur gérer le download.
+   Paramètres : defaultFrom, defaultTo (Y-m-d), contractStart (Y-m-d|null), today (Y-m-d) #}
+
+<div class="ts-card ts-planning">
+    <div>
+        <div class="ts-card-eyebrow">Export</div>
+        <h2 class="ts-card-title">Exporter mes données</h2>
+        <p class="ts-card-sub">
+            Téléchargez votre pointage sur une période. Le format Excel est mis
+            en forme et détaille les heures par projet ; le CSV est un export brut.
+        </p>
+    </div>
+
+    <form method="get" action="{{ path('app_export') }}" class="flex flex-col gap-4" data-turbo="false">
+        <div class="field-row">
+            <div class="field">
+                <label class="lbl" for="export-from">Du</label>
+                <input class="inp" type="date" id="export-from" name="from" value="{{ defaultFrom }}">
+            </div>
+            <div class="field">
+                <label class="lbl" for="export-to">Au</label>
+                <input class="inp" type="date" id="export-to" name="to" value="{{ defaultTo }}">
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="lbl" for="export-format">Format</label>
+            <select class="inp" id="export-format" name="format">
+                <option value="xlsx">Excel (.xlsx)</option>
+                <option value="csv">CSV</option>
+            </select>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <button type="submit" class="btn-submit">
+                <span>Exporter</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+            </button>
+
+            {% if contractStart %}
+                <a class="btn-ghost" data-turbo="false"
+                   href="{{ path('app_export', {from: contractStart, to: today, format: 'xlsx'}) }}">
+                    Depuis le début du contrat
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>

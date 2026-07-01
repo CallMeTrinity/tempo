@@ -3,10 +3,17 @@
 namespace App\Controller;
 
 use App\Entity\BlacklistedEmail;
+use App\Entity\Project;
 use App\Entity\TimeEntry;
 use App\Entity\User;
+use App\Enum\ProjectScope;
 use App\Enum\Status;
+use App\Form\ProjectType;
+use App\Project\ProjectColors;
+use App\Project\ProjectIcons;
 use App\Repository\BlacklistedEmailRepository;
+use App\Repository\ProjectRepository;
+use App\Repository\TimeEntryProjectRepository;
 use App\Repository\TimeEntryRepository;
 use App\Repository\UserRepository;
 use App\Service\TimesheetService;
@@ -79,6 +86,7 @@ class AdminController extends AbstractController
         TimeEntryRepository $entries,
         TimesheetService $timesheet,
         UserRepository $users,
+        TimeEntryProjectRepository $allocations,
         Request $request,
     ): Response {
         /** @var User $me */
@@ -95,6 +103,7 @@ class AdminController extends AbstractController
 
         $stats = $timesheet->computeMonthlyStats($user, $year, $month);
         $recent = $entries->findRecentByUser($user, 60);
+        $projectHours = $allocations->findProjectHoursForUser($user);
 
         $prev = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month))->modify('-1 month');
         $next = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month))->modify('+1 month');
@@ -105,6 +114,7 @@ class AdminController extends AbstractController
             'month' => $month,
             'stats' => $stats,
             'recentEntries' => $recent,
+            'projectHours' => $projectHours,
             'prev' => ['year' => (int) $prev->format('Y'), 'month' => (int) $prev->format('n')],
             'next' => ['year' => (int) $next->format('Y'), 'month' => (int) $next->format('n')],
             'pendingCount' => $entries->countPendingApproval(),
@@ -349,5 +359,149 @@ class AdminController extends AbstractController
         $this->addFlash('success', sprintf('%s retiré de la liste noire.', $email));
 
         return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_admin_registrations'));
+    }
+
+    #[Route('/users/{id<\d+>}/toggle-independent', name: 'user_toggle_independent', methods: ['POST'])]
+    public function toggleIndependent(
+        User $user,
+        Request $request,
+        EntityManagerInterface $em,
+        TimeEntryRepository $entries,
+    ): Response {
+        if (!$this->isCsrfTokenValid('user_toggle_independent_' . $user->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF invalide.');
+        }
+        if ($user->isAdmin()) {
+            $this->addFlash('error', 'Le mode de suivi ne s\'applique pas à un compte admin.');
+
+            return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_admin_user_detail', ['id' => $user->getId()]));
+        }
+
+        $now = new DateTimeImmutable();
+        $becomingIndependent = !$user->isIndependent();
+
+        // Requalification des entrées en vol (les APPROVED restent verrouillées) :
+        //  - passage en indépendant : DRAFT/SUBMITTED/TO_BE_REVIEWED → SELF_TRACKED ;
+        //  - retour en mode équipe   : SELF_TRACKED → DRAFT (resoumission possible).
+        $fromStatuses = $becomingIndependent
+            ? [Status::DRAFT, Status::SUBMITTED, Status::TO_BE_REVIEWED]
+            : [Status::SELF_TRACKED];
+        $toStatus = $becomingIndependent ? Status::SELF_TRACKED : Status::DRAFT;
+
+        $em->wrapInTransaction(function () use ($user, $entries, $fromStatuses, $toStatus, $becomingIndependent, $now): void {
+            $user->setIsIndependent($becomingIndependent)->setUpdatedAt($now);
+            foreach ($entries->findByUserAndStatuses($user, $fromStatuses) as $entry) {
+                $entry->setStatus($toStatus)->setUpdatedAt($now);
+            }
+        });
+
+        $this->addFlash('success', $becomingIndependent
+            ? sprintf('%s passe en suivi personnel : ses heures ne nécessitent plus de validation.', $user->getFullName() ?? $user->getEmail())
+            : sprintf('%s repasse en suivi équipe : ses heures devront à nouveau être soumises pour validation.', $user->getFullName() ?? $user->getEmail()));
+
+        return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_admin_user_detail', ['id' => $user->getId()]));
+    }
+
+    #[Route('/projects', name: 'projects', methods: ['GET'])]
+    public function projects(ProjectRepository $projects, TimeEntryProjectRepository $allocations): Response
+    {
+        $teamProjects = $projects->findTeamProjects();
+
+        return $this->render('admin/projects.html.twig', [
+            'projects' => $teamProjects,
+            'hoursByProject' => $allocations->sumHoursByProject($teamProjects),
+        ]);
+    }
+
+    #[Route('/projects/{id<\d+>}', name: 'project_detail', methods: ['GET'])]
+    public function projectDetail(
+        Project $project,
+        TimeEntryRepository $entries,
+        UserRepository $users,
+        TimeEntryProjectRepository $allocations,
+    ): Response {
+        $memberHours = $allocations->findMemberHoursForProject($project);
+        $totalHours = array_sum(array_map(
+            static fn (array $row): float => $row['hours'],
+            $memberHours,
+        ));
+
+        return $this->render('admin/project_detail.html.twig', [
+            'project' => $project,
+            'memberHours' => $memberHours,
+            'totalHours' => $totalHours,
+            'pendingCount' => $entries->countPendingApproval(),
+            'unverifiedCount' => $users->countUnverified(),
+        ]);
+    }
+
+    #[Route('/projects/new', name: 'project_new', methods: ['GET', 'POST'])]
+    public function newProject(Request $request, EntityManagerInterface $em): Response
+    {
+        $now = new DateTimeImmutable();
+        $project = (new Project())
+            ->setScope(ProjectScope::TEAM)
+            ->setOwner(null)
+            ->setIsActive(true)
+            ->setIcon(ProjectIcons::DEFAULT)
+            ->setColor(ProjectColors::DEFAULT)
+            ->setCreatedAt($now)
+            ->setUpdatedAt($now);
+
+        $form = $this->createForm(ProjectType::class, $project);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // On force le scope au cas où (le champ n'est pas exposé au form).
+            $project->setScope(ProjectScope::TEAM)->setOwner(null);
+            $em->persist($project);
+            $em->flush();
+            $this->addFlash('success', sprintf('Projet « %s » créé.', $project->getName()));
+
+            return $this->redirectToRoute('app_admin_projects');
+        }
+
+        return $this->render('admin/project_form.html.twig', [
+            'form' => $form,
+            'project' => $project,
+            'mode' => 'new',
+        ]);
+    }
+
+    #[Route('/projects/{id<\d+>}/edit', name: 'project_edit', methods: ['GET', 'POST'])]
+    public function editProject(Project $project, Request $request, EntityManagerInterface $em): Response
+    {
+        $form = $this->createForm(ProjectType::class, $project);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $project->setUpdatedAt(new DateTimeImmutable());
+            $em->flush();
+            $this->addFlash('success', sprintf('Projet « %s » mis à jour.', $project->getName()));
+
+            return $this->redirectToRoute('app_admin_projects');
+        }
+
+        return $this->render('admin/project_form.html.twig', [
+            'form' => $form,
+            'project' => $project,
+            'mode' => 'edit',
+        ]);
+    }
+
+    #[Route('/projects/{id<\d+>}/toggle', name: 'project_toggle', methods: ['POST'])]
+    public function toggleProject(Project $project, Request $request, EntityManagerInterface $em): Response
+    {
+        if (!$this->isCsrfTokenValid('project_toggle_' . $project->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF invalide.');
+        }
+
+        $project->setIsActive(!$project->isActive())->setUpdatedAt(new DateTimeImmutable());
+        $em->flush();
+        $this->addFlash('success', $project->isActive()
+            ? sprintf('Projet « %s » activé.', $project->getName())
+            : sprintf('Projet « %s » désactivé.', $project->getName()));
+
+        return $this->redirectToRoute('app_admin_projects');
     }
 }

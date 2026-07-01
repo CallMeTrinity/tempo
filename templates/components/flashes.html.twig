@@ -1,6 +1,0 @@
-{# Affiche tous les flash messages (success, error, warning, info) #}
-{% for type, messages in app.flashes(['success', 'error', 'warning', 'info']) %}
-    {% for message in messages %}
-        <div class="flash flash-{{ type }}">{{ message }}</div>
-    {% endfor %}
-{% endfor %}

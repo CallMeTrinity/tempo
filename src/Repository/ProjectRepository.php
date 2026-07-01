@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Project;
+use App\Entity\User;
+use App\Enum\ProjectScope;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +18,76 @@ class ProjectRepository extends ServiceEntityRepository
         parent::__construct($registry, Project::class);
     }
 
-    //    /**
-    //     * @return Project[] Returns an array of Project objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('p.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Projets actifs visibles par l'utilisateur :
+     * - TEAM dont il est membre,
+     * - PERSONAL dont il est owner.
+     *
+     * @return Project[]
+     */
+    public function findVisibleFor(User $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->leftJoin('p.members', 'm')
+            ->andWhere('p.isActive = true')
+            ->andWhere(
+                '(p.scope = :team AND m = :user) OR (p.scope = :personal AND p.owner = :user)'
+            )
+            ->setParameter('team', ProjectScope::TEAM)
+            ->setParameter('personal', ProjectScope::PERSONAL)
+            ->setParameter('user', $user)
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 
-    //    public function findOneBySomeField($value): ?Project
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * Projets personnels d'un utilisateur (pour son profil).
+     *
+     * @return Project[]
+     */
+    public function findPersonalProjects(User $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.scope = :personal')
+            ->andWhere('p.owner = :user')
+            ->setParameter('personal', ProjectScope::PERSONAL)
+            ->setParameter('user', $user)
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Projets d'équipe dont l'utilisateur est membre (pour son profil).
+     *
+     * @return Project[]
+     */
+    public function findTeamProjectsForMember(User $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.members', 'm')
+            ->andWhere('p.scope = :team')
+            ->andWhere('m = :user')
+            ->setParameter('team', ProjectScope::TEAM)
+            ->setParameter('user', $user)
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Tous les projets d'équipe (pour l'admin).
+     *
+     * @return Project[]
+     */
+    public function findTeamProjects(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.scope = :team')
+            ->setParameter('team', ProjectScope::TEAM)
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

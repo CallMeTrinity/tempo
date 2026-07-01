@@ -19,6 +19,8 @@ Un espace administrateur permet par ailleurs de superviser les fiches de l'équi
 - **Planification de plages** : poser des PTO/UTO/OFF ou pré-réserver du télétravail sur une plage de dates.
 - **Profil utilisateur** : type de contrat, heures hebdomadaires, date de début de contrat, jours travaillés par semaine, jours de télétravail par défaut, pause par défaut.
 - **Pré-suggestion** des jours de télétravail récurrents pour accélérer la saisie.
+- **Gestion de projets** : projets d'équipe (admin) et personnels (profil), avec affectation d'heures par projet lors de la saisie journalière.
+- **Export des données** : téléchargement du pointage sur une période libre (mois courant par défaut, ou depuis le début du contrat) au format **Excel `.xlsx`** (détail regroupé par année/semaine avec totaux hebdomadaires, lignes colorées par type de jour, onglet récap par projet) ou **CSV** (dump à plat, BOM UTF-8 + séparateur `;` pour Excel FR).
 - **Workflow de validation** : brouillon → soumis → approuvé / à revoir. Soumission en bloc par semaine.
 - **Authentification** : inscription locale, connexion par mot de passe, support Google ID (champ prévu sur le `User`).
 - **Espace admin** : vue d'ensemble des utilisateurs et de leurs fiches, validation/renvoi en bulk par semaine, validation manuelle des inscriptions, blacklist d'emails.
@@ -30,6 +32,7 @@ Un espace administrateur permet par ailleurs de superviser les fiches de l'équi
 - **Twig** + **Tailwind CSS** (via `symfonycasts/tailwind-bundle` et AssetMapper)
 - **Symfony UX** (Stimulus, Turbo)
 - **Symfony Security** natif + `symfonycasts/verify-email-bundle`
+- **PhpSpreadsheet** (`phpoffice/phpspreadsheet`) pour l'export Excel `.xlsx`
 - **PHPUnit 13** pour les tests
 
 ## Arborescence du projet
@@ -43,10 +46,11 @@ tempo/
 ├── migrations/         # migrations Doctrine
 ├── public/             # document root (index.php)
 ├── src/
-│   ├── Controller/     # Home, Month, Planning, Profile, Admin, Security, Registration
-│   ├── Entity/         # User, TimeEntry, Project, BlacklistedEmail
-│   ├── Enum/           # DayType, ContractType, Status, Roles
+│   ├── Controller/     # Home, Month, Planning, Profile, Admin, Export, Security, Registration
+│   ├── Entity/         # User, TimeEntry, TimeEntryProject, Project, BlacklistedEmail
+│   ├── Enum/           # DayType, ContractType, Status, ProjectScope, Roles
 │   ├── EventListener/  # AdminRedirectListener
+│   ├── Export/         # TimeEntryExporter + writers CSV/xlsx (export du pointage)
 │   ├── Form/           # TimeEntryType, UserProfileType, DayPlanningType, RegistrationFormType
 │   ├── Repository/     # repositories Doctrine
 │   ├── Security/       # EmailVerifier

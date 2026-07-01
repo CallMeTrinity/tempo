@@ -42,16 +42,16 @@
                     <div class="divider"><span>identifiez-vous</span></div>
 
                     <div class="field">
-                        <label for="username" class="lbl">Nom d'utilisateur</label>
-                        <input type="text" value="{{ last_username }}" name="_username" id="username"
-                               class="inp" placeholder="prenom.n"
-                               autocomplete="username" required autofocus>
+                        <label for="username" class="lbl">Email</label>
+                        <input type="email" value="{{ last_username }}" name="_username" id="username"
+                               class="inp" placeholder="prenom.n@exemple.fr"
+                               autocomplete="email" required autofocus>
                     </div>
 
                     <div class="field">
                         <div class="lbl-row">
                             <label for="password" class="lbl">Mot de passe</label>
-                            <a href="#" class="link-q">Mot de passe oublié ?</a>
+                            <a href="{{ path('app_forgot_password_request') }}" class="link-q">Mot de passe oublié ?</a>
                         </div>
                         <input type="password" name="_password" id="password"
                                class="inp" placeholder="••••••••••"

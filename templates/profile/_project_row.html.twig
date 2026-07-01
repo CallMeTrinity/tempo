@@ -1,0 +1,37 @@
+{# Une ligne de projet personnel, isolée dans un turbo-frame pour permettre la
+   mise à jour du seul statut actif/inactif sans recharger la page.
+   Réutilisé par la liste (profile/projects.html.twig) et par l'action toggle
+   (ProfileController::toggleProject) qui renvoie ce fragment seul. #}
+<turbo-frame class="ts-table-row" id="project-{{ project.id }}">
+    <div class="ts-table-user">
+        {% include 'admin/_project_color.html.twig' with {color: project.color, icon: project.icon, size: 32} only %}
+        <div class="flex flex-col min-w-0">
+            <span class="ts-table-user-name">{{ project.name }}</span>
+            {% if project.description %}
+                <span class="ts-table-user-meta">{{ project.description }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ts-project-hours num" title="Total d'heures affectées à ce projet">
+        {{ (hours|default(0))|number_format((hours|default(0)) == (hours|default(0))|round ? 0 : 1, ',', ' ') }}h
+    </div>
+    <div>
+        {% if project.isActive %}
+            <span class="ts-row-badge ts-badge-approved">Actif</span>
+        {% else %}
+            <span class="ts-row-badge ts-badge-draft">Inactif</span>
+        {% endif %}
+    </div>
+    <div class="ts-table-actions">
+        {# Form sans data-turbo-frame : il cible par défaut son frame parent
+           (project-{id}), que l'action toggle renvoie mis à jour. #}
+        <form method="post" action="{{ path('app_profile_projects_toggle', {id: project.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('project_toggle_' ~ project.id) }}">
+            <button type="submit" class="link-q">
+                {{ project.isActive ? 'Désactiver' : 'Activer' }}
+            </button>
+        </form>
+        {# _top : on sort du frame pour une navigation pleine page vers l'édition. #}
+        <a class="link-q" data-turbo-frame="_top" href="{{ path('app_profile_projects_edit', {id: project.id}) }}">Éditer →</a>
+    </div>
+</turbo-frame>

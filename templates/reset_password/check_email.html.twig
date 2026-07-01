@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vérifiez votre boîte mail · Tempo{% endblock %}
+
+{% block body %}
+    <main class="auth-page">
+        {% include 'components/auth_panel.html.twig' with {
+            eyebrow: 'N° 03 — Récupération',
+            number: '01.0',
+            unit: 'email',
+            lede: "Le lien part à l'instant. Ouvrez votre boîte mail et suivez les instructions pour choisir un nouveau mot de passe."
+        } only %}
+
+        <section class="form-side">
+            <header class="form-side-top">
+                <a href="{{ path('app_login') }}" class="back-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
+                    Connexion
+                </a>
+                <div class="lang">FR · <span class="text-small-font">EN</span></div>
+            </header>
+
+            <div class="form-wrap">
+                <div class="form-card">
+                    <div class="form-head">
+                        <div class="eyebrow">C'est envoyé</div>
+                        <h1 class="form-h1">Vérifiez votre boîte mail.</h1>
+                        <p class="form-sub">
+                            Si un compte est associé à cette adresse, un email contenant un lien de réinitialisation vient d'être envoyé.
+                            Ce lien expire dans {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.
+                        </p>
+                        <p class="form-sub">Pensez à vérifier vos courriers indésirables si vous ne le trouvez pas.</p>
+                    </div>
+
+                    <div class="form-foot">
+                        Adresse incorrecte ?
+                        <a href="{{ path('app_forgot_password_request') }}" class="link-swap">Réessayer</a>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="form-side-foot">
+                <span>© 2026 Tempo</span>
+                <span class="dot">·</span>
+                <a href="#">Aide</a>
+                <span class="dot">·</span>
+                <a href="#">Confidentialité</a>
+            </footer>
+        </section>
+    </main>
+{% endblock %}
